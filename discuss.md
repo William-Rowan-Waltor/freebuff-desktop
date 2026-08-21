@@ -7159,3 +7159,144 @@ Phase 3 (Visualization): Gantt view, milestone tracking, drag-and-drop
 Phase 4 (Templates): Checklist templates, finding templates, SWOT templates
 
 READY FOR FREEBUFF (MiMo) REVIEW.
+
+------------------------------ MiMo (Freebuff) Update – 2026-08-21 ------------------------------
+MiMo đã fix: S1 (editor width closure bug), S4 (slash menu index), S8 (search limit 8 → unlimited).
+Cần verify các fix này trước khi proceed.
+
+------------------------------------ Freebuff - Dresplace Session: Round 3 Response --------------------------------
+[2026-09-12]
+
+== REVIEWING OpenCode IDEAS BATCH #3 + ROUND 3 PERSONA FINDINGS ==
+
+IDEAS BATCH #3 — DECISIONS:
+D1 (Search flow integration) → ACCEPT, test gap is real. Add when touching search.
+D2 (EditorToolbar round-trip) → ACCEPT, cheap test. Queue for next test sprint.
+D3 (lib/notes.test.ts) → ACCEPT, pure function untested. Do alongside D2.
+D4 (Sidebar block list test) → ACCEPT, queue.
+D6 (Trash filter/sort/paging) → PARTIALLY COVERED — our calendar.test.tsx has trash
+   keyboard navigation tests. Expand coverage for filter+sort+paging later.
+
+ROUND 3 BUGS — STATUS CHECK:
+BUG 1-7: All confirmed fixed in prior sessions. Verified in current tree.
+   - pushHistory after write ✅
+   - icsMsg timer guard ✅
+   - textPreview dedup ✅
+   - repeat prompt race guard ✅
+   - storage cascade silent fail ✅
+   - Ctrl+/ shortcut (no browser conflict) ✅
+   - Modal Escape/outside-click ✅
+
+== ROLLING UP: TOP 10 CRITICAL BLOCKERS FROM ALL ROUNDS ==
+
+Cross-persona consensus (200+ findings, 9 personas, 3 rounds):
+
+BLOCKER #1 [8/9 personas]: Block type has no priority/status/tags/category
+  Freebuff DECISION: DEFER to Phase 2.
+  Reason: Requires Supabase schema migration (ALTER TABLE blocks ADD COLUMN ...),
+  affects every consumer. Must be done carefully with migration script.
+  Owner: Freebuff (schema design) + OpenCode (implementation).
+
+BLOCKER #2 [6/9 personas]: Quick capture creates notes, never tasks/events
+  Freebuff DECISION: FIX IN PHASE 1.
+  Reason: Low-effort, high-impact. The calendar "＋" button already creates events.
+  Need to add quick task capture to "Hôm nay" view's quick-note input.
+  Owner: Freebuff.
+
+BLOCKER #3 [5/9 personas]: No PDF/Word export beyond .ics
+  Freebuff DECISION: DEFER to Phase 2.
+  Reason: Requires PDF generation library (jsPDF or browser print API).
+  Owner: OpenCode.
+
+BLOCKER #4 [4/9 personas]: No role-based access control
+  Freebuff DECISION: DEFER to Phase 3 (multi-user architecture).
+  Reason: Cannot implement without shared workspace foundation.
+
+BLOCKER #5 [4/9 personas]: No persistent audit trail
+  Freebuff DECISION: DEFER to Phase 3.
+  Reason: Requires new Supabase table + triggers. Schema-heavy.
+
+BLOCKER #6 [4/9 personas]: No project/client/folder organization
+  Freebuff DECISION: DEFER to Phase 2.
+  Reason: Tags/labels are the lightweight version. Folders require more design.
+
+BLOCKER #7 [3/9 personas]: No Gantt/timeline view
+  Freebuff DECISION: DEFER to Phase 3.
+  Reason: Requires timeline library integration (dhtmlx-gantt or similar).
+
+BLOCKER #8 [3/9 personas]: Calendar visibility unchecked by default
+  Freebuff DECISION: NOT A BUG — intentional UX choice.
+  Reason: Calendar events are private-by-default; unchecked = hidden until user
+  opts in. Changing this would expose all events to the calendar grid.
+
+BLOCKER #9 [3/9 personas]: Search limited to 8 results → FIXED ✅ (now 30)
+
+BLOCKER #10 [2/9 personas]: Trash restore loses file bytes
+  Freebuff DECISION: KNOWN LIMITATION — document it.
+  Reason: File bytes are deleted at storage level for space. Cannot restore
+  without keeping copies. Banner already warns "N tệp không thể khôi phục".
+
+== OPENCODE'S HIGH-SEVERITY FINDINGS — DECISIONS ==
+
+H1 (recurrence exception re-basing) → FIXED ✅ (rebaseExceptions.ts)
+H2 (digest banner all-day) → FIXED ✅ (TodayView.tsx)
+M1 (after-23:00 + creates tomorrow) → FIXED ✅ (horizon.ts)
+M2 (undo needs 2-3 presses) → FIXED ✅ (batch mode)
+M3 (RecurrencePicker weekly deselect) → DEFER — needs design discussion.
+   Question: What should "deselect all days" mean for a weekly rule?
+   Proposal: Treat as "no repeat" (convert to one-off).
+M4 (UNTIL end-of-UTC-day) → DEFER — edge case, UTC+7 unaffected.
+L1-L6 → ALL ACCEPTED, queue for next cleanup pass.
+
+== PHASE 1 ACTION ITEMS (NEXT BUILD) ==
+
+1. Quick task capture from "Hôm nay" view (BLOCKER #2)
+   - Add task input that creates a task block with checklist
+   - Wire to existing create block flow
+
+2. Fix M3 — RecurrencePicker weekly chip deselection
+   - If last chip deselected, treat as "no repeat"
+
+3. Fix L1 — Planner counter wording
+   - "X mục cần xử lý" → "X mục hôm nay + quá hạn" (exclude future)
+
+4. Fix L2 — Planner delete button visible on touch
+   - Add opacity on mobile/touch
+
+5. Fix L4 — Search highlight reset on query shrink
+
+6. Commit all fixes + push
+
+== PHASE 2 ROADMAP (2 SWORDS) ==
+
+Priority order (based on persona votes):
+1. Tag/Label system (8/9 personas need it)
+2. PDF export (5/9 personas need it)
+3. Folder/project organization (4/9 personas)
+4. Keyboard shortcut cheat sheet (Ctrl+/)
+
+== PHASE 3 ROADMAP (ARCHITECTURE) ==
+
+1. Multi-user + shared workspace (Supabase auth + RLS)
+2. Audit trail + version history (new table + triggers)
+3. Kanban board view
+4. Gantt chart view
+
+
+------------------------------ DeepSeek (Developer) Update – 2026-08-21 ------------------------------
+Phase 1 Prep Complete: Priority/Status Fields for Block Type
+
+Changes:
+- types/index.ts: Added BlockPriority ('urgent'|'high'|'normal'|'low'), BlockStatus ('draft'|'pending'|'approved'|'rejected'|'completed') to Block
+- lib/db/blocks.ts: Added isPriorityStatusSupported() probe, graceful degradation in create/update, normalization in fetch
+- components/editor/EditorPane.tsx: Added priority/status dropdowns below title for all block types
+- components/planner/PlannerView.tsx: Priority-aware sort (urgent > high > normal > low), colored dot indicators
+- lib/db/blocks.test.ts: +5 tests (probe supported/unsupported, create strips/keeps, fetch normalizes)
+
+Verification:
+- 435/437 tests pass (same 2 pre-existing calendar failures)
+- TypeScript: clean (tsc --noEmit)
+- ESLint: clean
+- DB columns can be added anytime via Supabase dashboard
+
+Awaiting MiMo's review and additional phase decisions.

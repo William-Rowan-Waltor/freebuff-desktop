@@ -22,7 +22,21 @@ import { expandBlockOccurrences, occurrenceBlock, excludeOccurrence } from '@/li
 import { anchorFor, dateLabel, horizonOf, startOfDay, type Horizon } from '@/lib/horizon'
 import RecurrenceChoice from '@/components/calendar/RecurrenceChoice'
 import TodoChip from '@/components/planner/TodoChip'
-import type { Block } from '@/types'
+import type { Block, BlockPriority } from '@/types'
+
+const PRIORITY_RANK: Record<BlockPriority, number> = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
+}
+
+const PRIORITY_DOT: Record<BlockPriority, string> = {
+  urgent: 'bg-red-500',
+  high: 'bg-amber-500',
+  normal: '',
+  low: 'bg-zinc-600',
+}
 
 interface SectionMeta {
   key: Horizon
@@ -104,6 +118,9 @@ export default function PlannerView() {
     }
     for (const key of Object.keys(buckets) as Horizon[]) {
       buckets[key].sort((a, b) => {
+        const pa = PRIORITY_RANK[a.block.priority ?? 'normal'] ?? 2
+        const pb = PRIORITY_RANK[b.block.priority ?? 'normal'] ?? 2
+        if (pa !== pb) return pa - pb
         const ta = a.block.start_time ? new Date(a.block.start_time).getTime() : Number.MAX_SAFE_INTEGER
         const tb = b.block.start_time ? new Date(b.block.start_time).getTime() : Number.MAX_SAFE_INTEGER
         return ta - tb
@@ -187,7 +204,7 @@ export default function PlannerView() {
       />
       {total > 0 && (
         <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">
-          {total} mục cần xử lý hôm nay
+          {total} mục quá hạn + hôm nay
         </p>
       )}
 
@@ -264,6 +281,9 @@ export default function PlannerView() {
                         })()}
                         <div className="min-w-0 flex-1">
                           <div className="flex min-w-0 items-center gap-2">
+                            {block.priority && block.priority !== 'normal' && (
+                              <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${PRIORITY_DOT[block.priority]}`} />
+                            )}
                             <p className="truncate text-[13px] font-medium text-zinc-100">
                               {block.title ?? 'Chưa có tiêu đề'}
                             </p>
@@ -283,7 +303,7 @@ export default function PlannerView() {
                           onClick={(e) => handleDelete(e, { block, masterId, tasks })}
                           aria-label={`Xóa ${block.title ?? 'mục'}`}
                           title="Xóa"
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-600 opacity-30 transition-all hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100 touch-manipulation"
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-600 opacity-50 transition-all hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100 touch-manipulation"
                         >
                           <Trash size={13} />
                         </button>

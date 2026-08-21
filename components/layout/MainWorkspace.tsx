@@ -608,6 +608,15 @@ export default function MainWorkspace() {
       .slice(0, 30)
   }, [blocks, query])
 
+  // Reset highlight when query shrinks below current index.
+  useEffect(() => {
+    if (highlight >= searchResults.length && searchResults.length > 0) {
+      setHighlight(searchResults.length - 1)
+    } else if (searchResults.length === 0) {
+      setHighlight(0)
+    }
+  }, [searchResults.length, highlight])
+
   const onSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       setSearchOpen(false)

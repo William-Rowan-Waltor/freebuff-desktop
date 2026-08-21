@@ -54,6 +54,7 @@ export default function TodayView() {
   const setActiveRightPane = useWorkspaceStore((state) => state.setActiveRightPane)
 
   const [capture, setCapture] = useState('')
+  const [captureMode, setCaptureMode] = useState<'note' | 'task'>('note')
   const [savedFlash, setSavedFlash] = useState(false)
   const flashTimer = useRef<number | null>(null)
 
@@ -219,12 +220,36 @@ export default function TodayView() {
     const text = capture.trim()
     if (!text) return
     const firstLine = text.split('\n')[0].trim()
-    await addBlock({
-      type: 'note',
-      title: firstLine.slice(0, 48) || 'Ghi chú nhanh',
-      content: appendNote({ type: 'doc', content: [] }, text) as Block['content'],
-      start_time: null,
-    })
+    if (captureMode === 'task') {
+      // Create a note with a task checklist — each non-empty line becomes a task item.
+      const lines = text.split('\n').filter((l) => l.trim())
+      const taskContent = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'taskList' as const,
+            attrs: { tight: true, itemTypeName: 'taskItem' },
+            content: lines.map((line) => ({
+              type: 'taskItem' as const,
+              attrs: { checked: false, text: line.trim() },
+            })),
+          },
+        ],
+      }
+      await addBlock({
+        type: 'note',
+        title: firstLine.slice(0, 48) || 'Task mới',
+        content: taskContent as Block['content'],
+        start_time: null,
+      })
+    } else {
+      await addBlock({
+        type: 'note',
+        title: firstLine.slice(0, 48) || 'Ghi chú nhanh',
+        content: appendNote({ type: 'doc', content: [] }, text) as Block['content'],
+        start_time: null,
+      })
+    }
     setCapture('')
     setSavedFlash(true)
     if (flashTimer.current !== null) window.clearTimeout(flashTimer.current)
@@ -270,6 +295,32 @@ export default function TodayView() {
 
       {/* Quick capture */}
       <section className="mb-4 rounded-xl border border-border-subtle bg-surface p-3">
+        <div className="mb-2 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setCaptureMode('note')}
+            className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+              captureMode === 'note'
+                ? 'bg-accent/15 text-accent'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <NotePencil size={11} className="mr-1 inline" />
+            Ghi chú
+          </button>
+          <button
+            type="button"
+            onClick={() => setCaptureMode('task')}
+            className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+              captureMode === 'task'
+                ? 'bg-accent/15 text-accent'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <CheckCircle size={11} className="mr-1 inline" />
+            Task
+          </button>
+        </div>
         <div className="flex items-start gap-2">
           <textarea
             value={capture}
@@ -281,25 +332,25 @@ export default function TodayView() {
               }
             }}
             rows={2}
-            placeholder="Ghi chú nhanh… (Enter để lưu)"
-            aria-label="Ghi chú nhanh"
+            placeholder={captureMode === 'task' ? 'Task mới (mỗi dòng 1 task, Enter để lưu)' : 'Ghi chú nhanh… (Enter để lưu)'}
+            aria-label={captureMode === 'task' ? 'Tạo task mới' : 'Ghi chú nhanh'}
             className="min-h-[56px] flex-1 resize-none rounded-lg border border-border-subtle bg-background px-2.5 py-2 text-[13px] text-zinc-200 placeholder:text-zinc-500 focus:border-accent focus:outline-none"
           />
           <button
             type="button"
             onClick={() => void handleCapture()}
             disabled={!capture.trim()}
-            aria-label="Lưu ghi chú nhanh"
+            aria-label={captureMode === 'task' ? 'Tạo task' : 'Lưu ghi chú nhanh'}
             className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 text-[12px] font-medium text-accent-foreground transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
           >
             <PaperPlaneTilt size={13} weight="bold" />
-            Ghi chú nhanh
+            {captureMode === 'task' ? 'Tạo task' : 'Ghi chú nhanh'}
           </button>
         </div>
         {savedFlash && (
           <p className="mt-2 flex items-center gap-1 text-[12px] text-emerald-400">
             <CheckCircle size={13} weight="fill" />
-            Đã thêm ghi chú
+            {captureMode === 'task' ? 'Đã thêm task' : 'Đã thêm ghi chú'}
           </p>
         )}
       </section>
