@@ -1,4 +1,4 @@
-# Running Freebuff Desktop with Docker
+# Running Dresplace with Docker
 
 This packages the whole app into a single Docker image so you can run it with one
 command — or double-click — and hand the same image to other people.
@@ -42,14 +42,14 @@ Anyone with Docker can run it — they don't need your source code or Node.
 On your machine, save the image to a single file:
 
 ```bash
-docker save freebuff-desktop:latest | gzip > freebuff-desktop.tar.gz
+docker save dresplace:latest | gzip > dresplace.tar.gz
 ```
 
 Send that one file (a few hundred MB). The recipient:
 
 ```bash
-docker load -i freebuff-desktop.tar.gz
-docker run -d -p 3000:3000 --name freebuff freebuff-desktop:latest
+docker load -i dresplace.tar.gz
+docker run -d -p 3000:3000 --name freebuff dresplace:latest
 open http://localhost:3000
 ```
 

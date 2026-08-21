@@ -1,6 +1,6 @@
 {
-  "appId": "com.freebuff.desktop",
-  "productName": "Freebuff Desktop",
+  "appId": "com.dresplace.app",
+  "productName": "Dresplace",
   "asar": false,
   "files": [
     "electron/**",

@@ -1,9 +1,9 @@
-# 🗓️ Freebuff Desktop
+# 🗓️ Dresplace
 
 **Lên lịch, ghi chú, quản lý sự kiện với AI** — ứng dụng quản lý thời gian all-in-one cho người Việt.
 
 <p align="center">
-  <img src="assets/icon.png" width="120" alt="Freebuff Logo">
+  <img src="assets/icon.png" width="120" alt="Dresplace Logo">
 </p>
 
 <p align="center">
@@ -62,14 +62,14 @@
 ### 🖥️ Ứng dụng Desktop (Windows)
 
 **Cách 1: Tải file cài đặt**
-1. Download `Freebuff Desktop Setup 1.0.0.exe` từ [Releases](https://github.com/William-Rowan-Waltor/freebuff-desktop/releases)
+1. Download `Dresplace Setup 1.0.0.exe` từ [Releases](https://github.com/William-Rowan-Waltor/dresplace/releases)
 2. Chạy file `.exe` → cài đặt tự động
 3. Mở ứng dụng từ Start Menu hoặc Desktop shortcut
 
 **Cách 2: Build từ source**
 ```bash
-git clone https://github.com/William-Rowan-Waltor/freebuff-desktop.git
-cd freebuff-desktop
+git clone https://github.com/William-Rowan-Waltor/dresplace.git
+cd dresplace
 npm install
 npm run electron:build
 # File cài đặt sẽ nằm trong thư mục release/
@@ -93,8 +93,8 @@ npm run electron:build
 
 **Cách 2: Chạy locally**
 ```bash
-git clone https://github.com/William-Rowan-Waltor/freebuff-desktop.git
-cd freebuff-desktop
+git clone https://github.com/William-Rowan-Waltor/dresplace.git
+cd dresplace
 npm install
 cp .env.example .env.local  # Thêm Supabase keys
 npm run dev
@@ -173,7 +173,7 @@ npm run icons            # Regenerate app icons
 ### Project Structure
 
 ```
-freebuff-desktop/
+dresplace/
 ├── app/                    # Next.js app router
 │   ├── login/              # Login page
 │   ├── page.tsx            # Main workspace
@@ -232,12 +232,12 @@ MIT License - Xem [LICENSE](LICENSE) để biết chi tiết.
 
 ## 🔗 Liên kết
 
-- **GitHub**: [William-Rowan-Waltor/freebuff-desktop](https://github.com/William-Rowan-Waltor/freebuff-desktop)
-- **Issues**: [GitHub Issues](https://github.com/William-Rowan-Waltor/freebuff-desktop/issues)
-- **Releases**: [GitHub Releases](https://github.com/William-Rowan-Waltor/freebuff-desktop/releases)
+- **GitHub**: [William-Rowan-Waltor/dresplace](https://github.com/William-Rowan-Waltor/dresplace)
+- **Issues**: [GitHub Issues](https://github.com/William-Rowan-Waltor/dresplace/issues)
+- **Releases**: [GitHub Releases](https://github.com/William-Rowan-Waltor/dresplace/releases)
 
 ---
 
 <p align="center">
-  Made with ❤️ by Freebuff Team
+  Made with ❤️ by Dresplace Team
 </p>

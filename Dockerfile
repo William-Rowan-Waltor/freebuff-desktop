@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
-# Freebuff Desktop — Docker image.
-# Build:  docker build --build-arg NEXT_PUBLIC_SUPABASE_URL=... --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=... -t freebuff-desktop .
+# Dresplace — Docker image.
+# Build:  docker build --build-arg NEXT_PUBLIC_SUPABASE_URL=... --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=... -t dresplace .
 # (docker compose does this for you — see DOCKER.md.)
 
 # ---------- deps: install production dependencies ----------

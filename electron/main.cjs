@@ -1,4 +1,4 @@
-// Freebuff Desktop — Electron shell.
+// Dresplace — Electron shell.
 //
 // Spawns the Next.js server (the production standalone build when present,
 // otherwise `next dev`) on a free local port and opens it in a native window,
@@ -103,13 +103,13 @@ async function startServer() {
     loadEnvFile()
     if (!hasSupabaseEnv()) {
       console.error(
-        '[freebuff] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are missing ' +
+        '[dresplace] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are missing ' +
           '(no .env.local next to the app). The app cannot authenticate without them.',
       )
       if (app.isReady()) {
         const { dialog } = require('electron')
         dialog.showErrorBox(
-          'Freebuff Desktop — thiếu cấu hình',
+          'Dresplace — thiếu cấu hình',
           'Không tìm thấy NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. ' +
             'Đặt tệp .env.local cạnh ứng dụng rồi mở lại.',
         )
@@ -161,7 +161,7 @@ function createWindow(url) {
     minWidth: 960,
     minHeight: 600,
     autoHideMenuBar: true,
-    title: 'Freebuff Desktop',
+    title: 'Dresplace',
     backgroundColor: '#09090b',
     icon: path.join(APP_ROOT, 'assets', 'icon.png'),
     webPreferences: {
@@ -199,7 +199,7 @@ if (!app.requestSingleInstanceLock()) {
       const port = await startServer()
       createWindow(`http://127.0.0.1:${port}`)
     } catch (err) {
-      console.error('[freebuff] Failed to start:', err)
+      console.error('[dresplace] Failed to start:', err)
       app.quit()
     }
   })

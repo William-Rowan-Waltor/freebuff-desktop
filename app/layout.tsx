@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Workspace",
-  description: "Schedule, notes and files in one place",
+  title: "Dresplace",
+  description: "Lên lịch, ghi chú và quản lý tệp trong một nơi",
 };
 
 const noFlashScript = `(function(){try{var d=document.documentElement,s=localStorage.getItem('app-theme-store'),t='dark',a='#34d399';if(s){var j=JSON.parse(s);if(j&&j.state){if(j.state.theme)t=j.state.theme;if(typeof j.state.accent==='string')a=j.state.accent;}}d.dataset.theme=t;if(t==='custom')d.style.setProperty('--accent',a);}catch(e){}})();`;

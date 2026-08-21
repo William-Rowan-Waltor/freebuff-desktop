@@ -38,7 +38,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/Freebuff Desktop Setup *.exe
+            release/Dresplace Setup *.exe
           draft: false
           prerelease: false
         env:
