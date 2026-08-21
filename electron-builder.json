@@ -1,0 +1,29 @@
+{
+  "appId": "com.freebuff.desktop",
+  "productName": "Freebuff Desktop",
+  "asar": false,
+  "files": [
+    "electron/**",
+    "assets/**",
+    ".next/standalone/**",
+    ".next/static/**",
+    ".env.local",
+    "package.json"
+  ],
+  "directories": {
+    "output": "release"
+  },
+  "win": {
+    "target": ["nsis"],
+    "icon": "assets/icon.ico"
+  },
+  "mac": {
+    "target": ["dmg"],
+    "icon": "assets/icon.icns"
+  },
+  "linux": {
+    "target": ["AppImage"],
+    "category": "Utility",
+    "icon": "assets/icon.png"
+  }
+}

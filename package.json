@@ -12,36 +12,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "electron:dev": "electron .",
-    "electron:build": "cp next.config.electron.ts next.config.ts && npm run build && electron-builder && git checkout next.config.ts 2>/dev/null || true",
+    "electron:build": "cp next.config.electron.ts next.config.ts && npm run build && electron-builder --config electron-builder.json && git checkout next.config.ts 2>/dev/null || true",
     "icons": "node scripts/generate-icons.mjs"
-  },
-  "build": {
-    "appId": "com.freebuff.desktop",
-    "productName": "Freebuff Desktop",
-    "asar": false,
-    "files": [
-      "electron/**",
-      "assets/**",
-      ".next/standalone/**",
-      ".next/static/**",
-      ".env.local",
-      "package.json"
-    ],    "directories": {
-      "output": "release"
-    },
-    "win": {
-      "target": ["nsis"],
-      "icon": "assets/icon.ico"
-    },
-    "mac": {
-      "target": ["dmg"],
-      "icon": "assets/icon.icns"
-    },
-    "linux": {
-      "target": ["AppImage"],
-      "category": "Utility",
-      "icon": "assets/icon.png"
-    }
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.21",
