@@ -39,6 +39,7 @@ import EditorPane from '@/components/editor/EditorPane'
 import ShortcutGuide from '@/components/layout/ShortcutGuide'
 import PlannerView from '@/components/planner/PlannerView'
 import KanbanBoard from '@/components/kanban/KanbanBoard'
+import GanttChart from '@/components/gantt/GanttChart'
 import TodayView from '@/components/today/TodayView'
 import TodoChip from '@/components/planner/TodoChip'
 import { countTasks } from '@/lib/tasks'
@@ -64,7 +65,7 @@ import type { DeletedBlock } from '@/lib/db/blocks'
 import type { Block, BlockType } from '@/types'
 import type { PurgeHistoryEntry } from '@/store/useBlocksStore'
 
-type Tab = 'today' | 'calendar' | 'planner' | 'kanban' | 'notes' | 'files' | 'imported' | 'trash'
+type Tab = 'today' | 'calendar' | 'planner' | 'kanban' | 'gantt' | 'notes' | 'files' | 'imported' | 'trash'
 
 const CodeEditor = dynamic(() => import('@/components/editor/CodeEditor'), { ssr: false })
 const CalendarView = dynamic(() => import('@/components/calendar/CalendarView'), { ssr: false })
@@ -74,6 +75,7 @@ const TAB_META: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'calendar', label: 'Lịch', icon: CalendarBlank },
   { key: 'planner', label: 'Kế hoạch', icon: CalendarDots },
   { key: 'kanban', label: 'Bảng', icon: CalendarDots },
+  { key: 'gantt', label: 'Timeline', icon: CalendarBlank },
   { key: 'notes', label: 'Ghi chú', icon: NotePencil },
   { key: 'files', label: 'Tệp', icon: Files },
   { key: 'imported', label: 'Đã nhập', icon: TrayArrowDown },
@@ -1420,6 +1422,7 @@ export default function MainWorkspace() {
 
           {tab === 'planner' && <PlannerView />}
           {tab === 'kanban' && <KanbanBoard />}
+          {tab === 'gantt' && <GanttChart />}
 
           {tab === 'notes' && (
             <div className="h-full overflow-y-auto p-6">
