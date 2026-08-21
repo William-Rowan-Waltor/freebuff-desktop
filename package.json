@@ -12,7 +12,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && electron-builder",
+    "electron:build": "cp next.config.electron.ts next.config.ts && npm run build && electron-builder && git checkout next.config.ts 2>/dev/null || true",
     "icons": "node scripts/generate-icons.mjs"
   },
   "build": {
