@@ -27,6 +27,7 @@ import {
   type Workspace,
 } from '@/lib/db/workspaces'
 import { supabase } from '@/lib/supabase/client'
+import { logAudit } from '@/lib/audit'
 
 /** History cap for Ctrl/Cmd+Z across block edits (also the persisted cap). */
 const HISTORY_LIMIT = 30
@@ -327,6 +328,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
     const block = await createBlockDb(input)
     get().pushHistory()
     set((state) => ({ blocks: [...state.blocks, block] }))
+    logAudit({ blockId: block.id, blockTitle: block.title, action: 'create' })
     return block
   },
 
@@ -336,6 +338,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
     set((state) => ({
       blocks: state.blocks.map((b) => (b.id === id ? updated : b)),
     }))
+    logAudit({ blockId: id, blockTitle: updated.title, action: 'update' })
   },
 
   removeBlock: async (id) => {
@@ -431,6 +434,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
         redoStack: [],
       }
     })
+    logAudit({ blockId: id, blockTitle: block?.title ?? null, action: 'delete' })
   },
 
   undoDelete: async () => {
@@ -546,6 +550,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
     // restore later converges). The delete banner's undoDelete remains the
     // full-fidelity path; this is the trash's best-effort tree restore.
     await get().restoreTrashRelations(id)
+    logAudit({ blockId: id, blockTitle: block.title, action: 'restore' })
   },
 
   restoreTrashRelations: async (id) => {
