@@ -36,6 +36,7 @@ import SettingsMenu from '@/components/layout/SettingsMenu'
 import Clock from '@/components/layout/Clock'
 import TimerStatusBar from '@/components/layout/TimerStatusBar'
 import EditorPane from '@/components/editor/EditorPane'
+import ShortcutGuide from '@/components/layout/ShortcutGuide'
 import PlannerView from '@/components/planner/PlannerView'
 import TodayView from '@/components/today/TodayView'
 import TodoChip from '@/components/planner/TodoChip'
@@ -48,6 +49,7 @@ import { useOverride, splitSeries } from '@/lib/override'
 import { excludeOccurrence, splitSeriesAt } from '@/lib/expansion'
 import { shiftExceptions } from '@/lib/rebaseExceptions'
 import { buildWorkspaceIcs, downloadIcs } from '@/lib/ics'
+import { exportBlockAsPdf, exportNotesAsPdf } from '@/lib/pdf-export'
 import { importIcs, previewIcs, type IcsPreview, type IcsEventRole } from '@/lib/ics-import'
 import { fileExists } from '@/lib/db/storage'
 import {
@@ -1197,6 +1199,15 @@ export default function MainWorkspace() {
           </button>
           <button
             type="button"
+            onClick={() => exportNotesAsPdf(blocks)}
+            title="Xuất tất cả ghi chú ra PDF"
+            aria-label="Xuất PDF"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border-subtle text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100 active:scale-[0.98]"
+          >
+            <DownloadSimple size={16} />
+          </button>
+          <button
+            type="button"
             onClick={() => icsImportRef.current?.click()}
             disabled={icsProbing}
             title={
@@ -2129,6 +2140,15 @@ export default function MainWorkspace() {
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
+                      onClick={() => exportBlockAsPdf(selectedBlock)}
+                      title="Xuất block này ra PDF"
+                      aria-label="Xuất PDF"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                    >
+                      <DownloadSimple size={15} />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => {
                         if (window.confirm(`Xóa \u201c${selectedBlock.title ?? 'block này'}\u201d vào thùng rác?`)) {
                           void removeBlock(selectedBlock.id)
@@ -2668,6 +2688,8 @@ export default function MainWorkspace() {
           </div>
         </Toast>
       )}
+
+      <ShortcutGuide />
     </main>
   )
 }
