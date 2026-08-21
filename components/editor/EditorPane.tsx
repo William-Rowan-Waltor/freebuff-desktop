@@ -219,6 +219,13 @@ export default function EditorPane({ block, onChange }: EditorPaneProps) {
       : SLASH_OPTIONS.filter((opt) => norm(opt.label).includes(q))
   }, [slash])
 
+  // Reset slash menu index when filter changes so it never exceeds bounds.
+  useEffect(() => {
+    if (slash && slashIndex >= filteredSlash.length) {
+      setSlashIndex(Math.max(0, filteredSlash.length - 1))
+    }
+  }, [filteredSlash.length, slash, slashIndex])
+
   const candidates = useMemo(() => {
     const q = norm(linkQuery.trim())
     const attached = new Set(relations.filter((r) => r.parent_id === block.id).map((r) => r.child_id))

@@ -293,6 +293,9 @@ export default function MainWorkspace() {
     } catch { /* ignore */ }
     return DEFAULT_PANE_WIDTH
   })
+  const editorWidthRef = useRef(editorWidth)
+  // Keep ref in sync with state for drag handler closure.
+  useEffect(() => { editorWidthRef.current = editorWidth }, [editorWidth])
   const uploadRef = useRef<HTMLInputElement>(null)
 
   // Search state
@@ -602,7 +605,7 @@ export default function MainWorkspace() {
         ),
       }))
       .filter(({ haystack }) => haystack.includes(q))
-      .slice(0, 8)
+      .slice(0, 30)
   }, [blocks, query])
 
   const onSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -2038,11 +2041,12 @@ export default function MainWorkspace() {
               const dx = ev.clientX - startX
               const newW = Math.max(MIN_PANE_WIDTH, Math.min(MAX_PANE_WIDTH, startW - dx))
               setEditorWidth(newW)
+              editorWidthRef.current = newW
             }
             const onUp = () => {
               document.removeEventListener('mousemove', onMove)
               document.removeEventListener('mouseup', onUp)
-              try { localStorage.setItem('editor-pane-width', String(editorWidth)) } catch { /* ignore */ }
+              try { localStorage.setItem('editor-pane-width', String(editorWidthRef.current)) } catch { /* ignore */ }
             }
             document.addEventListener('mousemove', onMove)
             document.addEventListener('mouseup', onUp)
