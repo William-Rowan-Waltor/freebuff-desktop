@@ -1,0 +1,23 @@
+# One-command Docker packaging for Freebuff Desktop.
+#   docker compose up -d --build   -> builds and starts on http://localhost:3000
+#   docker compose down            -> stops the container
+#
+# Reads NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY from .env
+# (the start.bat / start.sh launchers create .env from .env.local automatically).
+
+services:
+  freebuff:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Missing in .env — copy .env.example to .env and fill in your Supabase URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Missing in .env — copy .env.example to .env and fill in your Supabase anon key}
+    image: freebuff-desktop:latest
+    container_name: freebuff-desktop
+    ports:
+      - "3000:3000"
+    environment:
+      # Runtime values for the auth proxy (also baked in at build time).
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    restart: unless-stopped

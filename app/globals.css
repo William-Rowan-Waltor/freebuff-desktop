@@ -1,26 +1,409 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ---- semantic tokens (dark default) ---- */
+  --background: #0b0b0d;
+  --foreground: #e7e7ea;
+  --surface: #131316;
+  --surface-raised: #18181c;
+  --border: #26262c;
+  --muted: #9d9da6;
+  --accent: #34d399;
+  --accent-strong: #10b981;
+  --accent-foreground: #06281c;
+
+  /* ---- zinc ramp override points (flip in light) ---- */
+  --z-100: #f4f4f5;
+  --z-200: #e4e4e7;
+  --z-300: #d4d4d8;
+  --z-400: #a1a1aa;
+  --z-500: #71717a;
+  --z-600: #52525b;
+  --z-700: #3f3f46;
+  --z-800: #27272a;
+  --z-900: #18181b;
+  --z-950: #09090b;
 }
 
+[data-theme='light'] {
+  --background: #f6f6f8;
+  --foreground: #18181b;
+  --surface: #ffffff;
+  --surface-raised: #fdfdfe;
+  --border: #d4d4d8;
+  --muted: #52525b;
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-foreground: #052e1b;
+
+  --z-100: #09090b;
+  --z-200: #18181b;
+  --z-300: #27272a;
+  --z-400: #52525b;
+  --z-500: #71717a;
+  --z-600: #8e8e98;
+  --z-700: #a8a8b2;
+  --z-800: #e8e8ec;
+  --z-900: #efeff2;
+  --z-950: #f6f6f8;
+}
+
+/* custom = user pick of --accent; aught dark palette but accent-driven */
+[data-theme='custom'] {
+  --accent-strong: color-mix(in srgb, var(--accent) 78%, #000);
+  --accent-foreground: color-mix(in srgb, var(--accent) 16%, #052e1b);
+}
+
+/* ---- map semantic + zinc back to Tailwind v4 utilities ---- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border-subtle: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-zinc-100: var(--z-100);
+  --color-zinc-200: var(--z-200);
+  --color-zinc-300: var(--z-300);
+  --color-zinc-400: var(--z-400);
+  --color-zinc-500: var(--z-500);
+  --color-zinc-600: var(--z-600);
+  --color-zinc-700: var(--z-700);
+  --color-zinc-800: var(--z-800);
+  --color-zinc-900: var(--z-900);
+  --color-zinc-950: var(--z-950);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ---------- FullCalendar v7 (monarch theme) ----------
+
+   NOTE: FullCalendar v7 renders NO `.fc` class on its root element (the
+   calendar root is `fc-app-shell`, set in CalendarView.tsx). The monarch
+   palette defaults (light blue on white) would otherwise win because they are
+   defined on `:root`. Vars defined on `.fc-app-shell` inherit to the whole
+   calendar subtree and override the palette defaults. */
+.fc-app-shell {
+  --fc-monarch-primary: #34d399;
+  --fc-monarch-primary-foreground: #06281c;
+  --fc-monarch-primary-over: #2bb183;
+  --fc-monarch-primary-down: #27a077;
+  --fc-monarch-secondary: rgb(52 211 153 / 0.14);
+  --fc-monarch-secondary-foreground: #a7f3d0;
+  --fc-monarch-secondary-over: rgb(52 211 153 / 0.2);
+  --fc-monarch-secondary-down: rgb(52 211 153 / 0.26);
+  --fc-monarch-background: #0f0f12;
+  --fc-monarch-foreground: #e7e7ea;
+  --fc-monarch-faint-foreground: #71717a;
+  --fc-monarch-muted-foreground: #9d9da6;
+  --fc-monarch-faint: rgb(161 161 170 / 0.08);
+  --fc-monarch-muted: rgb(161 161 170 / 0.1);
+  --fc-monarch-strong: rgb(161 161 170 / 0.16);
+  --fc-monarch-stronger: rgb(161 161 170 / 0.22);
+  --fc-monarch-strongest: rgb(161 161 170 / 0.3);
+  --fc-monarch-event: #34d399;
+  --fc-monarch-event-contrast: #06281c;
+  --fc-monarch-highlight: rgb(52 211 153 / 0.12);
+  --fc-monarch-now: #fb7185;
+  --fc-monarch-selected: rgb(52 211 153 / 0.18);
+  --fc-monarch-selected-foreground: #d1fae5;
+  --fc-monarch-outline: #34d399;
+  --fc-monarch-radius-sm: 8px;
+  --fc-monarch-radius-md: 8px;
+  --fc-monarch-radius-lg: 10px;
+  font-size: 13px;
+}
+
+[data-theme='light'] .fc-app-shell {
+  --fc-monarch-primary: #059669;
+  --fc-monarch-primary-foreground: #ffffff;
+  --fc-monarch-primary-over: #047857;
+  --fc-monarch-primary-down: #065f46;
+  --fc-monarch-secondary: rgb(5 150 105 / 0.12);
+  --fc-monarch-secondary-foreground: #065f46;
+  --fc-monarch-background: #ffffff;
+  --fc-monarch-foreground: #18181b;
+  --fc-monarch-faint-foreground: #71717a;
+  --fc-monarch-muted-foreground: #52525b;
+  --fc-monarch-faint: rgb(24 24 27 / 0.05);
+  --fc-monarch-muted: rgb(24 24 27 / 0.08);
+  --fc-monarch-strong: rgb(24 24 27 / 0.12);
+  --fc-monarch-stronger: rgb(24 24 27 / 0.16);
+  --fc-monarch-strongest: rgb(24 24 27 / 0.22);
+  --fc-monarch-event: #059669;
+  --fc-monarch-event-contrast: #ffffff;
+  --fc-monarch-highlight: rgb(5 150 105 / 0.14);
+  --fc-monarch-now: #e11d48;
+  --fc-monarch-selected: rgb(5 150 105 / 0.16);
+  --fc-monarch-selected-foreground: #064e3b;
+  --fc-monarch-outline: #059669;
+}
+
+[data-theme='custom'] .fc-app-shell {
+  --fc-monarch-primary: var(--accent);
+  --fc-monarch-primary-foreground: var(--accent-foreground);
+  --fc-monarch-primary-over: var(--accent-strong);
+  --fc-monarch-primary-down: var(--accent-strong);
+  --fc-monarch-secondary: color-mix(in srgb, var(--accent) 14%, transparent);
+  --fc-monarch-secondary-foreground: var(--accent);
+  --fc-monarch-event: var(--accent);
+  --fc-monarch-event-contrast: var(--accent-foreground);
+  --fc-monarch-highlight: color-mix(in srgb, var(--accent) 12%, transparent);
+  --fc-monarch-selected: color-mix(in srgb, var(--accent) 18%, transparent);
+  --fc-monarch-outline: var(--accent);
+}
+
+.fc-app-shell button {
+  border-radius: 8px;
+}
+
+/* Monarch gives event blocks only 4px radius (looks square); bump them to the
+   app's rounded surface radius. fc-monarch-YjJ is the block-event element that
+   carries the event background (v7 renders events without the v6
+   .fc-daygrid-event/.fc-timegrid-event classes). */
+.fc-app-shell .fc-monarch-YjJ {
+  border-radius: var(--fc-monarch-radius-sm, 8px);
+}
+
+/* Conflict ring: the monarch theme's unlayered block-event box-shadow
+   (`.fc-monarch-A3h`) beats Tailwind v4's layered `ring-2` utility, so the
+   red conflict ring never painted (conflicted events looked identical to
+   normal ones). Re-assert the ring shadow with higher specificity for
+   conflicted events — CalendarView's eventClass adds `ring-2 ring-red-400/80`
+   exactly when conflicts.has(id). */
+.fc-app-shell [class~="ring-2"][class~="ring-red-400/80"] {
+  box-shadow: var(--tw-ring-shadow, 0 0 0 2px rgb(248 113 113 / 0.8));
+}
+
+/* ---------- Tiptap ---------- */
+.tiptap {
+  outline: none;
+  min-height: 100%;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Trash animations ---------- */
+@keyframes trash-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+}
+
+@keyframes trash-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes trash-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(239 68 68 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgb(239 68 68 / 0);
+  }
+}
+
+.animate-trash-out {
+  animation: trash-slide-out 0.3s ease-out forwards;
+}
+
+.animate-trash-in {
+  animation: trash-slide-in 0.3s ease-out forwards;
+}
+
+.animate-trash-pulse {
+  animation: trash-pulse 0.5s ease-out;
+}
+
+@keyframes toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toast-out 0.25s ease-in forwards;
+}
+
+@keyframes sweep-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.8);
+  }
+}
+
+.animate-sweep-out {
+  animation: sweep-out 0.5s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+/* ---------- no-flash guard: html[data-theme] set before paint by layout script ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'],
+:root:not([data-theme]) {
+  color-scheme: dark;
+}
+
+/* ---------- Tiptap prose + Obsidian-style task lists (Freebuff editor) ---------- */
+.tiptap-prose h1 {
+  margin: calc(var(--spacing) * 4) 0 calc(var(--spacing) * 2);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-prose h2 {
+  margin: calc(var(--spacing) * 4) 0 calc(var(--spacing) * 2);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-prose h3 {
+  margin: calc(var(--spacing) * 3) 0 calc(var(--spacing) * 1.5);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.tiptap-prose p {
+  margin: calc(var(--spacing) * 1.5) 0;
+}
+
+.tiptap-prose ul {
+  margin: calc(var(--spacing) * 2) 0;
+  list-style: disc;
+  padding-left: calc(var(--spacing) * 5);
+}
+
+.tiptap-prose ol {
+  margin: calc(var(--spacing) * 2) 0;
+  list-style: decimal;
+  padding-left: calc(var(--spacing) * 5);
+}
+
+.tiptap-prose blockquote {
+  border-left: 2px solid var(--accent);
+  padding-left: calc(var(--spacing) * 3);
+  color: var(--muted);
+}
+
+.tiptap-prose pre {
+  border-radius: 0.5rem;
+  background: var(--z-900);
+  padding: calc(var(--spacing) * 3);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+}
+
+.tiptap-prose code {
+  border-radius: 0.25rem;
+  background: var(--z-800);
+  padding: 0.125rem 0.25rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  color: var(--accent);
+}
+
+.tiptap-prose pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.tiptap-prose ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.25rem;
+  margin: calc(var(--spacing) * 2) 0;
+}
+
+.tiptap-prose li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.tiptap-prose li[data-type="taskItem"] > div {
+  flex: 1;
+}
+
+.tiptap-prose li[data-type="taskItem"] > div > p {
+  margin: 0;
+}
+
+.tiptap-prose li[data-type="taskItem"] input[type="checkbox"] {
+  margin-top: 0.3em;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.tiptap-prose li[data-type="taskItem"][data-checked="true"] > div {
+  opacity: 0.55;
+  text-decoration: line-through;
 }

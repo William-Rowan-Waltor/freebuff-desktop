@@ -1,0 +1,32 @@
+# Build context: only what the Docker build needs.
+
+# deps
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+
+# env (secrets stay local; .env is created from .env.local by the launchers)
+.env
+.env.*
+!.env.example
+
+# vcs / tooling
+.git
+.gitignore
+.vercel
+
+# tests & docs (not needed in the image)
+coverage
+**/*.test.ts
+**/*.test.tsx
+vitest.config.mjs
+vitest.setup.ts
+test
+
+# app-specific working dirs
+.freebuff
+graphify-out
+supabase
+scripts
