@@ -17,6 +17,9 @@ let recurrenceSupported: boolean | null = null
 // the column is missing (migration not applied), deletes fall back to hard
 // delete + row re-creation on undo, and the banner does not survive reloads.
 let softDeleteSupported: boolean | null = null
+// Probe for priority/status columns — when missing, writes strip them so the
+// row saves without error; reads normalise to null.
+let priorityStatusSupported: boolean | null = null
 
 /**
  * Whether blocks.recurrence / recurrence_exceptions exist on the served
@@ -32,6 +35,18 @@ export async function isRecurrenceSupported(): Promise<boolean> {
     .limit(1)
   recurrenceSupported = !/does not exist|could not find/i.test(error?.message ?? '')
   return recurrenceSupported
+}
+
+/**
+ * Whether blocks.priority / blocks.status exist on the served schema (cached
+ * probe).  When missing, writes strip the fields so the row saves as-is
+ * (priority/status become implicit "normal"/"draft").
+ */
+export async function isPriorityStatusSupported(): Promise<boolean> {
+  if (priorityStatusSupported !== null) return priorityStatusSupported
+  const { error } = await supabase.from(BLOCKS).select('priority,status').limit(1)
+  priorityStatusSupported = !/does not exist|could not find/i.test(error?.message ?? '')
+  return priorityStatusSupported
 }
 
 /**
@@ -83,6 +98,8 @@ export async function fetchBlocks(): Promise<Block[]> {
     ...(b as Block),
     recurrence: (b as Block).recurrence ?? null,
     recurrence_exceptions: (b as Block).recurrence_exceptions ?? null,
+    priority: (b as Block).priority ?? null,
+    status: (b as Block).status ?? null,
   }))
 }
 
@@ -101,6 +118,14 @@ export async function createBlock(input: BlockInput): Promise<Block> {
       stripped = true
     }
   }
+  let strippedPS = false
+  if (payload.priority !== undefined || payload.status !== undefined) {
+    if (!(await isPriorityStatusSupported())) {
+      delete payload.priority
+      delete payload.status
+      strippedPS = true
+    }
+  }
   const { data, error } = await supabase
     .from(BLOCKS)
     .insert(payload)
@@ -111,7 +136,9 @@ export async function createBlock(input: BlockInput): Promise<Block> {
   // The migration is missing: the row saved as a one-off — report that shape
   // so the UI treats it as non-recurring instead of echoing a rule that never
   // landed.
-  return stripped ? { ...block, recurrence: null, recurrence_exceptions: null } : block
+  let result = stripped ? { ...block, recurrence: null, recurrence_exceptions: null } : block
+  if (strippedPS) result = { ...result, priority: null, status: null }
+  return result
 }
 
 export async function updateBlock(id: string, patch: Partial<Block>): Promise<Block> {
@@ -125,6 +152,13 @@ export async function updateBlock(id: string, patch: Partial<Block>): Promise<Bl
   ) {
     delete payload.recurrence
     delete payload.recurrence_exceptions
+  }
+  if (
+    (payload.priority !== undefined || payload.status !== undefined) &&
+    !(await isPriorityStatusSupported())
+  ) {
+    delete payload.priority
+    delete payload.status
   }
   const { data, error } = await supabase
     .from(BLOCKS)

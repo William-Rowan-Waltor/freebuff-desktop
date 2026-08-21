@@ -315,3 +315,69 @@ describe('trash (fetchDeletedBlocks / purgeBlock)', () => {
     expect(recorded.calls).toEqual(expect.arrayContaining(['delete', 'eq']))
   })
 })
+
+describe('priority/status support', () => {
+  it('isPriorityStatusSupported returns true when columns exist', async () => {
+    const { from } = fakeClient({ selectResult: { data: [{}], error: null } })
+    supabaseFrom.mockReturnValue(from())
+    expect(await blocks.isPriorityStatusSupported()).toBe(true)
+  })
+
+  it('isPriorityStatusSupported returns false when columns are missing', async () => {
+    const { from } = fakeClient({
+      selectResult: { data: null, error: { message: 'column blocks.priority does not exist' } },
+    })
+    supabaseFrom.mockReturnValue(from())
+    expect(await blocks.isPriorityStatusSupported()).toBe(false)
+  })
+
+  it('createBlock strips priority/status when columns are missing', async () => {
+    const { from, recorded } = fakeClient({
+      selectResult: { data: null, error: { message: 'column blocks.priority does not exist' } },
+      singleResult: {
+        data: { id: 'b1', type: 'note', priority: null, status: null },
+        error: null,
+      },
+    })
+    supabaseFrom.mockReturnValue(from())
+    const block = await blocks.createBlock({ type: 'note', priority: 'urgent', status: 'approved' })
+    expect(recorded.insert).not.toHaveProperty('priority')
+    expect(recorded.insert).not.toHaveProperty('status')
+    expect(block.priority).toBeNull()
+    expect(block.status).toBeNull()
+  })
+
+  it('createBlock keeps priority/status when columns exist', async () => {
+    const { from, recorded } = fakeClient({
+      selectResult: { data: [{}], error: null },
+      singleResult: {
+        data: { id: 'b2', type: 'event', priority: 'urgent', status: 'approved' },
+        error: null,
+      },
+    })
+    supabaseFrom.mockReturnValue(from())
+    const block = await blocks.createBlock({ type: 'event', priority: 'urgent', status: 'approved' })
+    expect(recorded.insert).toHaveProperty('priority', 'urgent')
+    expect(recorded.insert).toHaveProperty('status', 'approved')
+    expect(block.priority).toBe('urgent')
+    expect(block.status).toBe('approved')
+  })
+
+  it('fetchBlocks normalizes null priority/status', async () => {
+    const { from } = fakeClient({
+      selectResult: {
+        data: [
+          { id: 'b1', type: 'note', priority: null, status: null },
+          { id: 'b2', type: 'event', priority: 'high', status: 'completed' },
+        ],
+        error: null,
+      },
+    })
+    supabaseFrom.mockReturnValue(from())
+    const result = await blocks.fetchBlocks()
+    expect(result[0].priority).toBeNull()
+    expect(result[0].status).toBeNull()
+    expect(result[1].priority).toBe('high')
+    expect(result[1].status).toBe('completed')
+  })
+})

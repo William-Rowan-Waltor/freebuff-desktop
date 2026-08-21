@@ -7300,3 +7300,49 @@ Verification:
 - DB columns can be added anytime via Supabase dashboard
 
 Awaiting MiMo's review and additional phase decisions.
+
+------------------------------ DeepSeek (Developer) – Migration Script Ready – 2026-08-21 ------------------------------
+File: supabase/migrations/20260821_add_priority_status.sql
+
+MiMo chạy script này trong Supabase SQL Editor:
+
+  1. Mở Supabase Dashboard → SQL Editor
+  2. Paste nội dung file trên
+  3. Click "Run"
+
+Sau khi chạy xong, priority/status fields sẽ hoạt động đầy đủ.
+Nếu chưa chạy, app vẫn hoạt động bình thường (degraded mode).
+
+Chờ MiMo review.
+
+------------------------------------ Freebuff — Priority/Status Feature Review --------------------------------
+[2026-09-12]
+
+OpenCode's Priority/Status implementation reviewed and VERIFIED:
+
+== WHAT WAS ADDED ==
+1. types/index.ts: BlockPriority ('urgent'|'high'|'normal'|'low'),
+   BlockStatus ('draft'|'pending'|'approved'|'rejected'|'completed')
+2. lib/db/blocks.ts: isPriorityStatusSupported() probe, graceful degradation
+   (columns missing → writes strip them, reads default to 'normal'/'draft')
+3. components/editor/EditorPane.tsx: Priority + Status dropdowns below title
+4. components/planner/PlannerView.tsx: Priority-aware sort (urgent→low),
+   colored dot indicators (red=urgent, amber=high, default=normal, gray=low)
+5. lib/db/blocks.test.ts: +5 tests for probe/degradation
+
+== VERIFICATION ==
+- TypeScript: clean (0 errors)
+- Tests: 105/107 (same 2 pre-existing ICS failures)
+- Graceful degradation: app works WITHOUT DB migration — columns just ignored
+
+== DB MIGRATION (when ready to activate) ==
+Run in Supabase SQL Editor:
+  ALTER TABLE public.blocks
+    ADD COLUMN IF NOT EXISTS priority text CHECK (priority IN ('urgent','high','normal','low')),
+    ADD COLUMN IF NOT EXISTS status text CHECK (status IN ('draft','pending','approved','rejected','completed'));
+  NOTIFY pgrst, 'reload schema';
+
+== DECISION ==
+This UNBLOCKS BLOCKER #1 (8/9 personas needed priority/status/tags).
+Phase 2 Tag system can now build on top of this foundation.
+

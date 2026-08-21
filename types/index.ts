@@ -1,5 +1,7 @@
 export type BlockType = 'event' | 'note' | 'file' | 'code';
 export type RelationType = 'attached' | 'embedded';
+export type BlockPriority = 'urgent' | 'high' | 'normal' | 'low';
+export type BlockStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'completed';
 
 export interface Block {
   id: string;
@@ -15,6 +17,10 @@ export interface Block {
   file_url: string | null;
   file_extension: string | null;
   owner_id: string | null;
+  /** Priority level for triage (urgent > high > normal > low). */
+  priority?: BlockPriority | null;
+  /** Workflow status for tracking progress. */
+  status?: BlockStatus | null;
   created_at?: string;
   updated_at?: string;
 }

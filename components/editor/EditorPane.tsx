@@ -552,6 +552,40 @@ export default function EditorPane({ block, onChange }: EditorPaneProps) {
           className="mb-3 w-full bg-transparent text-2xl font-semibold tracking-tight text-zinc-100 outline-none placeholder:text-zinc-600"
         />
 
+        <div className="mb-3 flex items-center gap-2">
+          <label className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+              Ưu tiên
+            </span>
+            <select
+              value={block.priority ?? 'normal'}
+              onChange={(e) => onChange(block, { priority: (e.target.value || null) as Block['priority'] })}
+              className="rounded-lg border border-border-subtle bg-background px-2 py-1 font-mono text-[11px] text-zinc-300 outline-none focus:border-accent"
+            >
+              <option value="urgent">Khẩn cấp</option>
+              <option value="high">Cao</option>
+              <option value="normal">Bình thường</option>
+              <option value="low">Thấp</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+              Trạng thái
+            </span>
+            <select
+              value={block.status ?? 'draft'}
+              onChange={(e) => onChange(block, { status: (e.target.value || null) as Block['status'] })}
+              className="rounded-lg border border-border-subtle bg-background px-2 py-1 font-mono text-[11px] text-zinc-300 outline-none focus:border-accent"
+            >
+              <option value="draft">Nháp</option>
+              <option value="pending">Chờ xử lý</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="rejected">Từ chối</option>
+              <option value="completed">Hoàn thành</option>
+            </select>
+          </label>
+        </div>
+
         {block.type === 'event' && (
           <div className="mb-4 rounded-xl border border-border-subtle bg-surface p-3">
             <div className="flex items-center gap-3">
