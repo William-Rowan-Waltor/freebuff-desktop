@@ -62,9 +62,13 @@ function dateOnly(iso: string): string {
 }
 
 function dateOnlyToISO(date: string): string {
+  // Pure YYYY-MM-DD → local-time 09:00 ISO
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
-  if (!m) return date
-  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 9, 0, 0).toISOString()
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 9, 0, 0).toISOString()
+  // PostgREST-normalized UTC-midnight instant (e.g. "2026-08-21T00:00:00.000Z")
+  const utc = /^(\d{4})-(\d{2})-(\d{2})T00:00:00(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.exec(date)
+  if (utc) return new Date(Number(utc[1]), Number(utc[2]) - 1, Number(utc[3]), 9, 0, 0).toISOString()
+  return date
 }
 
 function todayLocal(): string {

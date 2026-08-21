@@ -134,6 +134,146 @@ function blockTypeIcon(type: Block['type']): React.ElementType {
   }
 }
 
+// ─── Calendar side-panel: live clock ──────────────────────────────────
+function CalendarSideClock() {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
+  const d = new Date(now)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    <div className="rounded border border-border-subtle bg-surface-raised px-3 py-2">
+      <p className="font-mono text-2xl tabular-nums text-zinc-100">
+        {pad(d.getHours())}:{pad(d.getMinutes())}:{pad(d.getSeconds())}
+      </p>
+      <p className="mt-0.5 text-[11px] text-zinc-500">
+        {d.toLocaleDateString('vi-VI', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      </p>
+    </div>
+  )
+}
+
+// ─── Calendar side-panel: today's tasks with checkboxes ───────────────
+interface SideTask {
+  blockId: string
+  blockTitle: string | null
+  taskIdx: number
+  text: string
+  checked: boolean
+}
+
+function extractTasks(blocks: Block[]): SideTask[] {
+  const today = new Date().toISOString().slice(0, 10)
+  const results: SideTask[] = []
+  for (const b of blocks) {
+    if (b.type !== 'note' && b.type !== 'code') continue
+    // Include blocks whose start_time is today or is null (untimed notes).
+    const day = b.start_time?.slice(0, 10)
+    if (day && day !== today) continue
+    const content = b.content as { content?: Array<{ type?: string; content?: Array<{ type?: string; attrs?: { text?: string; checked?: boolean } }> }> } | null
+    if (!content?.content) continue
+    for (const node of content.content) {
+      if (node.type === 'taskList' && node.content) {
+        let idx = 0
+        for (const item of node.content) {
+          if (item.type === 'taskItem') {
+            results.push({
+              blockId: b.id,
+              blockTitle: b.title,
+              taskIdx: idx,
+              text: item.attrs?.text ?? '',
+              checked: item.attrs?.checked ?? false,
+            })
+            idx++
+          }
+        }
+      }
+    }
+  }
+  return results
+}
+
+function CalendarSideTasks({
+  blocks,
+  onOpenBlock,
+  onUpdateBlock,
+}: {
+  blocks: Block[]
+  onOpenBlock: (id: string) => void
+  onUpdateBlock: (id: string, patch: Partial<Block>) => void
+}) {
+  const tasks = useMemo(() => extractTasks(blocks), [blocks])
+  const toggleTask = (task: SideTask) => {
+    const block = blocks.find((b) => b.id === task.blockId)
+    if (!block?.content) return
+    const content = JSON.parse(JSON.stringify(block.content)) as {
+      content: Array<{ type?: string; content?: Array<{ type?: string; attrs?: Record<string, unknown> }> }>
+    }
+    let idx = 0
+    for (const node of content.content) {
+      if (node.type === 'taskList' && node.content) {
+        for (const item of node.content) {
+          if (item.type === 'taskItem') {
+            if (idx === task.taskIdx) {
+              item.attrs = { ...item.attrs, checked: !task.checked }
+              onUpdateBlock(task.blockId, { content })
+              return
+            }
+            idx++
+          }
+        }
+      }
+    }
+  }
+  if (tasks.length === 0) {
+    return (
+      <div>
+        <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+          Việc cần làm hôm nay
+        </p>
+        <p className="text-[11px] text-zinc-600">Không có task nào</p>
+      </div>
+    )
+  }
+  return (
+    <div>
+      <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+        Việc cần làm ({tasks.filter((t) => !t.checked).length} còn lại)
+      </p>
+      <div className="space-y-0.5">
+        {tasks.map((task, i) => (
+          <label
+            key={`${task.blockId}-${task.taskIdx}`}
+            className={`flex items-start gap-2 rounded px-2 py-1 text-[12px] transition-colors hover:bg-zinc-800/50 ${
+              task.checked ? 'text-zinc-600 line-through' : 'text-zinc-300'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={task.checked}
+              onChange={() => toggleTask(task)}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-emerald-500"
+            />
+            <span className="min-w-0 flex-1 truncate">
+              {task.text || (task.blockTitle ?? 'Task')}
+            </span>
+            <button
+              type="button"
+              onClick={() => onOpenBlock(task.blockId)}
+              className="shrink-0 text-[10px] text-zinc-600 hover:text-accent"
+              title={task.blockTitle ?? 'Mở block'}
+            >
+              →
+            </button>
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function MainWorkspace() {
   // The Hôm nay digest is the landing tab: today's events + overdue/today
   // tasks + quick capture, one glance at start of day.
@@ -151,8 +291,9 @@ export default function MainWorkspace() {
   const [createOpen, setCreateOpen] = useState(false)
   const createRef = useRef<HTMLDivElement>(null)
 
-  // Calendar side panel toggle.
+  // Calendar side panel toggle + draggable width.
   const [calendarSideOpen, setCalendarSideOpen] = useState(false)
+  const [calendarSidePct, setCalendarSidePct] = useState(65)
 
   const setSidebarOpen = useWorkspaceStore((state) => state.setSidebarOpen)
   const activeRightPane = useWorkspaceStore((state) => state.activeRightPane)
@@ -1099,8 +1240,8 @@ export default function MainWorkspace() {
 
           {tab === 'calendar' && (
             <div className="flex h-full min-h-0">
-              {/* Calendar — shrinks when side panel is open */}
-              <div className={`min-h-0 transition-all duration-300 ${calendarSideOpen ? 'w-[65%]' : 'w-full'}`}>
+              {/* Calendar — width controlled by the draggable divider */}
+              <div style={{ width: calendarSideOpen ? calendarSidePct + '%' : '100%' }} className="min-h-0 transition-none">
                 <CalendarView
                   events={blocks}
                   onSelectBlock={openBlock}
@@ -1123,9 +1264,35 @@ export default function MainWorkspace() {
                   }}
                 />
               </div>
-              {/* Side panel — upcoming events + quick capture */}
+              {/* Draggable divider */}
               {calendarSideOpen && (
-                <div className="flex w-[35%] min-w-[260px] flex-col border-l border-border-subtle bg-surface">
+                <div
+                  role="separator"
+                  aria-label="Kéo để chỉnh kích thước"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    const startX = e.clientX
+                    const startPct = calendarSidePct
+                    const container = (e.currentTarget.parentElement as HTMLElement)
+                    const totalW = container?.getBoundingClientRect().width ?? 1
+                    const onMove = (ev: MouseEvent) => {
+                      const dx = ev.clientX - startX
+                      const newPct = Math.max(40, Math.min(85, startPct + (dx / totalW) * 100))
+                      setCalendarSidePct(newPct)
+                    }
+                    const onUp = () => {
+                      document.removeEventListener('mousemove', onMove)
+                      document.removeEventListener('mouseup', onUp)
+                    }
+                    document.addEventListener('mousemove', onMove)
+                    document.addEventListener('mouseup', onUp)
+                  }}
+                  className="w-1 cursor-col-resize shrink-0 bg-border-subtle transition-colors hover:bg-accent/50"
+                />
+              )}
+              {/* Side panel — live clock, today's tasks, upcoming events */}
+              {calendarSideOpen && (
+                <div className="flex min-w-[260px] flex-col border-l border-border-subtle bg-surface">
                   <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2">
                     <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">
                       Bên cạnh
@@ -1140,6 +1307,14 @@ export default function MainWorkspace() {
                     </button>
                   </div>
                   <div className="flex-1 space-y-3 overflow-y-auto p-3">
+                    {/* Live clock */}
+                    <CalendarSideClock />
+                    {/* Today's tasks */}
+                    <CalendarSideTasks
+                      blocks={blocks}
+                      onOpenBlock={openBlock}
+                      onUpdateBlock={updateBlock}
+                    />
                     {/* Upcoming events */}
                     <div>
                       <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
