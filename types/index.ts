@@ -21,6 +21,8 @@ export interface Block {
   priority?: BlockPriority | null;
   /** Workflow status for tracking progress. */
   status?: BlockStatus | null;
+  /** Tags/labels for categorization (stored as comma-separated string). */
+  tags?: string | null;
   created_at?: string;
   updated_at?: string;
 }

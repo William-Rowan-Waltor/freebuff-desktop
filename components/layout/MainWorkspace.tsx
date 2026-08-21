@@ -779,6 +779,11 @@ export default function MainWorkspace() {
   }
 
   const notes = blocks.filter((b) => b.type === 'note' || b.type === 'code')
+  const [notesTagFilter, setNotesTagFilter] = useState<string | null>(null)
+  const filteredNotes = useMemo(() => {
+    if (!notesTagFilter) return notes
+    return notes.filter((b) => b.tags?.split(',').some((t) => t.trim() === notesTagFilter))
+  }, [notes, notesTagFilter])
   const fileBlocks = blocks.filter((b) => b.type === 'file')
 
   // Browser-Notification watcher for upcoming events (threshold in settings).
@@ -1411,8 +1416,46 @@ export default function MainWorkspace() {
                   hint="Bấm “Tạo mới” ở góc trên bên phải để tạo ghi chú đầu tiên."
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {notes.map((block) => {
+                <>
+                  {/* Tag filter */}
+                  {(() => {
+                    const allTags = new Set<string>()
+                    notes.forEach((b) => {
+                      if (b.tags) b.tags.split(',').filter(Boolean).forEach((t) => allTags.add(t.trim()))
+                    })
+                    if (allTags.size === 0) return null
+                    return (
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setNotesTagFilter(null)}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                            !notesTagFilter
+                              ? 'bg-accent text-accent-foreground'
+                              : 'border border-border-subtle text-zinc-400 hover:border-accent/50 hover:text-accent'
+                          }`}
+                        >
+                          Tất cả ({notes.length})
+                        </button>
+                        {[...allTags].sort().map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => setNotesTagFilter(notesTagFilter === tag ? null : tag)}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                              notesTagFilter === tag
+                                ? 'bg-accent text-accent-foreground'
+                                : 'border border-border-subtle text-zinc-400 hover:border-accent/50 hover:text-accent'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredNotes.map((block) => {
                     const tasks = countTasks(block.content)
                     return (
                       <div
@@ -1451,6 +1494,7 @@ export default function MainWorkspace() {
                     )
                   })}
                 </div>
+                </>
               )}
             </div>
           )}

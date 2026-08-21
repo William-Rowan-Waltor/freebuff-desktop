@@ -20,6 +20,8 @@ let softDeleteSupported: boolean | null = null
 // Probe for priority/status columns — when missing, writes strip them so the
 // row saves without error; reads normalise to null.
 let priorityStatusSupported: boolean | null = null
+// Probe for tags column — when missing, writes strip it.
+let tagsSupported: boolean | null = null
 
 /**
  * Whether blocks.recurrence / recurrence_exceptions exist on the served
@@ -47,6 +49,13 @@ export async function isPriorityStatusSupported(): Promise<boolean> {
   const { error } = await supabase.from(BLOCKS).select('priority,status').limit(1)
   priorityStatusSupported = !/does not exist|could not find/i.test(error?.message ?? '')
   return priorityStatusSupported
+}
+
+export async function isTagsSupported(): Promise<boolean> {
+  if (tagsSupported !== null) return tagsSupported
+  const { error } = await supabase.from(BLOCKS).select('tags').limit(1)
+  tagsSupported = !/does not exist|could not find/i.test(error?.message ?? '')
+  return tagsSupported
 }
 
 /**
@@ -100,6 +109,7 @@ export async function fetchBlocks(): Promise<Block[]> {
     recurrence_exceptions: (b as Block).recurrence_exceptions ?? null,
     priority: (b as Block).priority ?? null,
     status: (b as Block).status ?? null,
+    tags: (b as Block).tags ?? null,
   }))
 }
 
@@ -126,6 +136,13 @@ export async function createBlock(input: BlockInput): Promise<Block> {
       strippedPS = true
     }
   }
+  let strippedTags = false
+  if (payload.tags !== undefined) {
+    if (!(await isTagsSupported())) {
+      delete payload.tags
+      strippedTags = true
+    }
+  }
   const { data, error } = await supabase
     .from(BLOCKS)
     .insert(payload)
@@ -138,6 +155,7 @@ export async function createBlock(input: BlockInput): Promise<Block> {
   // landed.
   let result = stripped ? { ...block, recurrence: null, recurrence_exceptions: null } : block
   if (strippedPS) result = { ...result, priority: null, status: null }
+  if (strippedTags) result = { ...result, tags: null }
   return result
 }
 
@@ -159,6 +177,9 @@ export async function updateBlock(id: string, patch: Partial<Block>): Promise<Bl
   ) {
     delete payload.priority
     delete payload.status
+  }
+  if (payload.tags !== undefined && !(await isTagsSupported())) {
+    delete payload.tags
   }
   const { data, error } = await supabase
     .from(BLOCKS)

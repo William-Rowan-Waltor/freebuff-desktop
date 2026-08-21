@@ -586,6 +586,42 @@ export default function EditorPane({ block, onChange }: EditorPaneProps) {
           </label>
         </div>
 
+        {/* Tags input */}
+        <label className="mt-2 flex items-center gap-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+            Tag
+          </span>
+          <input
+            type="text"
+            value={block.tags ?? ''}
+            onChange={(e) => onChange(block, { tags: e.target.value || null })}
+            placeholder="tag1, tag2, ..."
+            className="flex-1 rounded-lg border border-border-subtle bg-background px-2 py-1 font-mono text-[11px] text-zinc-300 outline-none placeholder:text-zinc-600 focus:border-accent"
+          />
+        </label>
+        {(block.tags ?? '').split(',').filter(Boolean).length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {block.tags!.split(',').filter(Boolean).map((tag) => (
+              <span
+                key={tag.trim()}
+                className="inline-flex items-center gap-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent"
+              >
+                {tag.trim()}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newTags = block.tags!.split(',').filter((t) => t.trim() !== tag.trim()).join(', ')
+                    onChange(block, { tags: newTags || null })
+                  }}
+                  className="ml-0.5 text-accent/60 hover:text-accent"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         {block.type === 'event' && (
           <div className="mb-4 rounded-xl border border-border-subtle bg-surface p-3">
             <div className="flex items-center gap-3">
