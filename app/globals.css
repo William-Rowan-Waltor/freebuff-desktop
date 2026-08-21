@@ -121,9 +121,9 @@ body {
   --fc-monarch-selected: rgb(52 211 153 / 0.18);
   --fc-monarch-selected-foreground: #d1fae5;
   --fc-monarch-outline: #34d399;
-  --fc-monarch-radius-sm: 8px;
-  --fc-monarch-radius-md: 8px;
-  --fc-monarch-radius-lg: 10px;
+  --fc-monarch-radius-sm: 0px;
+  --fc-monarch-radius-md: 0px;
+  --fc-monarch-radius-lg: 0px;
   font-size: 13px;
 }
 
@@ -167,15 +167,13 @@ body {
 }
 
 .fc-app-shell button {
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
-/* Monarch gives event blocks only 4px radius (looks square); bump them to the
-   app's rounded surface radius. fc-monarch-YjJ is the block-event element that
-   carries the event background (v7 renders events without the v6
-   .fc-daygrid-event/.fc-timegrid-event classes). */
+/* Monarch gives event blocks only 4px radius (looks square); keep them
+   as sharp rectangles — no rounded corners on calendar event blocks. */
 .fc-app-shell .fc-monarch-YjJ {
-  border-radius: var(--fc-monarch-radius-sm, 8px);
+  border-radius: 0;
 }
 
 /* Conflict ring: the monarch theme's unlayered block-event box-shadow

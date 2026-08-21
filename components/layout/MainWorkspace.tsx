@@ -151,6 +151,9 @@ export default function MainWorkspace() {
   const [createOpen, setCreateOpen] = useState(false)
   const createRef = useRef<HTMLDivElement>(null)
 
+  // Calendar side panel toggle.
+  const [calendarSideOpen, setCalendarSideOpen] = useState(false)
+
   const setSidebarOpen = useWorkspaceStore((state) => state.setSidebarOpen)
   const activeRightPane = useWorkspaceStore((state) => state.activeRightPane)
   const setActiveRightPane = useWorkspaceStore((state) => state.setActiveRightPane)
@@ -488,6 +491,19 @@ export default function MainWorkspace() {
     })
     setSelectedBlock(block.id)
     setActiveRightPane('editor')
+    return block.id
+  }
+
+  // Calendar date click → create a NOTE (not an event) and open the quick-note
+  // popover so the user can type directly on the calendar.
+  const handleDateNote = async (dateStr: string) => {
+    const block = await addBlock({
+      type: 'note',
+      title: 'Ghi chú mới',
+      content: { type: 'doc', content: [] },
+      start_time: dateStr,
+      end_time: null,
+    })
     return block.id
   }
 
@@ -1082,24 +1098,103 @@ export default function MainWorkspace() {
           {tab === 'today' && <TodayView />}
 
           {tab === 'calendar' && (
-            <CalendarView
-              events={blocks}
-              onSelectBlock={openBlock}
-              onDateClick={handleDateClick}
-              onEventChange={(id, patch) => updateBlock(id, patch)}
-              onOverrideOccurrence={handleOverrideOccurrence}
-              onRescheduleSeries={handleRescheduleSeries}
-              onSplitSeries={handleSplitSeries}
-              onQuickNoteOverride={handleQuickNoteOverride}
-              onDeleteBlock={handleDeleteBlock}
-              onDeleteOccurrence={handleDeleteOccurrence}
-              onDeleteThisAndFuture={handleDeleteThisAndFuture}
-              onQuickNote={(id, text) => {
-                const block = blocks.find((b) => b.id === id)
-                if (!block) return
-                void updateBlock(id, { content: appendNote(block.content, text) as Block['content'] })
-              }}
-            />
+            <div className="flex h-full min-h-0">
+              {/* Calendar — shrinks when side panel is open */}
+              <div className={`min-h-0 transition-all duration-300 ${calendarSideOpen ? 'w-[65%]' : 'w-full'}`}>
+                <CalendarView
+                  events={blocks}
+                  onSelectBlock={openBlock}
+                  onDateClick={handleDateClick}
+                  onDateNote={handleDateNote}
+                  calendarSideOpen={calendarSideOpen}
+                  onToggleSide={() => setCalendarSideOpen(!calendarSideOpen)}
+                  onEventChange={(id, patch) => updateBlock(id, patch)}
+                  onOverrideOccurrence={handleOverrideOccurrence}
+                  onRescheduleSeries={handleRescheduleSeries}
+                  onSplitSeries={handleSplitSeries}
+                  onQuickNoteOverride={handleQuickNoteOverride}
+                  onDeleteBlock={handleDeleteBlock}
+                  onDeleteOccurrence={handleDeleteOccurrence}
+                  onDeleteThisAndFuture={handleDeleteThisAndFuture}
+                  onQuickNote={(id, text) => {
+                    const block = blocks.find((b) => b.id === id)
+                    if (!block) return
+                    void updateBlock(id, { content: appendNote(block.content, text) as Block['content'] })
+                  }}
+                />
+              </div>
+              {/* Side panel — upcoming events + quick capture */}
+              {calendarSideOpen && (
+                <div className="flex w-[35%] min-w-[260px] flex-col border-l border-border-subtle bg-surface">
+                  <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                      Bên cạnh
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarSideOpen(false)}
+                      aria-label="Đóng bảng bên"
+                      className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="flex-1 space-y-3 overflow-y-auto p-3">
+                    {/* Upcoming events */}
+                    <div>
+                      <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+                        Sự kiện sắp tới
+                      </p>
+                      <div className="space-y-1">
+                        {blocks
+                          .filter((b) => b.type === 'event' && b.start_time)
+                          .sort((a, b) => (a.start_time ?? '').localeCompare(b.start_time ?? ''))
+                          .slice(0, 8)
+                          .map((b) => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => openBlock(b.id)}
+                              className="w-full rounded border border-border-subtle px-2 py-1.5 text-left text-[12px] transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
+                            >
+                              <span className="block truncate font-medium text-zinc-200">{b.title ?? 'Sự kiện'}</span>
+                              <span className="block text-[10px] text-zinc-500">
+                                {b.start_time ? new Date(b.start_time).toLocaleDateString('vi-VI', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
+                              </span>
+                            </button>
+                          ))}
+                        {blocks.filter((b) => b.type === 'event' && b.start_time).length === 0 && (
+                          <p className="text-[11px] text-zinc-600">Chưa có sự kiện</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* Quick note capture */}
+                    <div>
+                      <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+                        Ghi chú nhanh
+                      </p>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const block = await addBlock({
+                            type: 'note',
+                            title: 'Ghi chú mới',
+                            content: { type: 'doc', content: [] },
+                            start_time: new Date().toISOString().slice(0, 10),
+                            end_time: null,
+                          })
+                          openBlock(block.id)
+                        }}
+                        className="flex w-full items-center gap-2 rounded border border-border-subtle px-2 py-1.5 text-[12px] text-zinc-400 transition-colors hover:border-accent/40 hover:text-accent"
+                      >
+                        <NotePencil size={13} />
+                        Tạo ghi chú mới
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {tab === 'planner' && <PlannerView />}

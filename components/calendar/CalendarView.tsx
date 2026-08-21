@@ -50,6 +50,15 @@ interface CalendarViewProps {
   onRescheduleSeries: (blockId: string, patch: Partial<Block>) => void
   /** Split the series ("Tất cả các lần sau lần này"): this + future get a new master. */
   onSplitSeries: (blockId: string, patch: { start_time?: string | null; end_time?: string | null }) => void
+  /**
+   * Click on an empty date cell: create a NOTE block (not an event) and
+   * return the new block's id so the quick-note popover can open on it.
+   */
+  onDateNote: (dateStr: string) => Promise<string | null>
+  /** Whether the calendar side panel is currently open. */
+  calendarSideOpen: boolean
+  /** Toggle the calendar side panel. */
+  onToggleSide: () => void
   /** Delete a plain block ("Xóa"). */
   onDeleteBlock: (id: string) => void
   /** Exclude one occurrence of a recurring series ("Xóa lần này"). */
@@ -257,6 +266,9 @@ export default function CalendarView({
   onOverrideOccurrence,
   onRescheduleSeries,
   onSplitSeries,
+  onDateNote,
+  calendarSideOpen,
+  onToggleSide,
   onDeleteBlock,
   onDeleteOccurrence,
   onDeleteThisAndFuture,
@@ -738,10 +750,38 @@ export default function CalendarView({
           </div>
         )}
         eventClick={handleEventClick}
-        dateClick={(info) => void beginRepeatPrompt(onDateClick(info.dateStr))}
+        dateClick={(info) => {
+          // Create a NOTE on the clicked date and open the quick-note
+          // popover directly — no event, no repeat picker.
+          void (async () => {
+            const blockId = await onDateNote(info.dateStr)
+            if (!blockId) return
+            // Force the quick-note popover open on the new note block.
+            // We position it at the center of the viewport since there's
+            // no event chip to anchor to.
+            const x = Math.max(NOTE_MARGIN, Math.min(window.innerWidth / 2 - NOTE_POPOVER_WIDTH / 2, window.innerWidth - NOTE_POPOVER_WIDTH - NOTE_MARGIN))
+            const y = Math.max(NOTE_MARGIN, window.innerHeight / 2 - 100)
+            setNoteText('')
+            setNoteFor({ id: blockId, x, y })
+          })()
+        }}
         eventDrop={handleEventDrop}
         eventResize={handleEventResize}
       />
+
+      {/* Side panel toggle — visible when the side panel is closed */}
+      {!calendarSideOpen && (
+        <button
+          type="button"
+          onClick={onToggleSide}
+          title="Mở bảng bên (sự kiện sắp tới + ghi chú nhanh)"
+          aria-label="Mở bảng bên"
+          className="absolute right-4 top-2 z-20 flex h-7 items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 text-[11px] font-medium text-zinc-400 shadow-sm transition-colors hover:border-accent/50 hover:text-accent"
+        >
+          <DotsSixVertical size={12} />
+          Bảng bên
+        </button>
+      )}
 
       {/* Mini date-picker for the ＋ button */}
       {datePickerOpen && (
