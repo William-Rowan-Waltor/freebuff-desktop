@@ -83,7 +83,9 @@ const CREATE_META: { key: CreateKind; label: string; icon: React.ElementType }[]
   { key: 'file', label: 'Tệp', icon: Files },
 ]
 
-const PANE_WIDTH = 520
+const DEFAULT_PANE_WIDTH = 520
+const MIN_PANE_WIDTH = 320
+const MAX_PANE_WIDTH = 900
 
 function normalizeText(s: string): string {
   return s
@@ -279,6 +281,18 @@ export default function MainWorkspace() {
   // tasks + quick capture, one glance at start of day.
   const [tab, setTab] = useState<Tab>('today')
   const paneRef = useRef<HTMLDivElement>(null)
+  const editorResizeRef = useRef<HTMLDivElement>(null)
+  // Resizable editor pane width (persisted to localStorage).
+  const [editorWidth, setEditorWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('editor-pane-width')
+      if (saved) {
+        const n = Number(saved)
+        if (n >= MIN_PANE_WIDTH && n <= MAX_PANE_WIDTH) return n
+      }
+    } catch { /* ignore */ }
+    return DEFAULT_PANE_WIDTH
+  })
   const uploadRef = useRef<HTMLInputElement>(null)
 
   // Search state
@@ -533,18 +547,20 @@ export default function MainWorkspace() {
 
   useEffect(() => {
     const pane = paneRef.current
+    const handle = editorResizeRef.current
     if (!pane) return
 
     const show = activeRightPane !== 'none'
+    if (handle) handle.style.display = show ? 'block' : 'none'
     gsap.killTweensOf(pane)
     // Apply visibility immediately (not inside the tween) so the pane can never
     // end up invisible while open if an animation is interrupted.
     gsap.set(pane, { visibility: show ? 'visible' : 'hidden' })
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      gsap.set(pane, { width: show ? PANE_WIDTH : 0 })
+      gsap.set(pane, { width: show ? editorWidth : 0 })
       return
     }
-    gsap.to(pane, { width: show ? PANE_WIDTH : 0, duration: 0.4, ease: 'power3.inOut' })
+    gsap.to(pane, { width: show ? editorWidth : 0, duration: 0.4, ease: 'power3.inOut' })
   }, [activeRightPane, selectedBlockId])
 
   // Close floating menus on outside click / Escape
@@ -2009,13 +2025,38 @@ export default function MainWorkspace() {
           )}
         </div>
 
+        {/* Draggable resize handle for editor pane */}
+        <div
+          ref={editorResizeRef}
+          role="separator"
+          aria-label="Kéo để chỉnh kích thước trình soạn thảo"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            const startX = e.clientX
+            const startW = editorWidth
+            const onMove = (ev: MouseEvent) => {
+              const dx = ev.clientX - startX
+              const newW = Math.max(MIN_PANE_WIDTH, Math.min(MAX_PANE_WIDTH, startW - dx))
+              setEditorWidth(newW)
+            }
+            const onUp = () => {
+              document.removeEventListener('mousemove', onMove)
+              document.removeEventListener('mouseup', onUp)
+              try { localStorage.setItem('editor-pane-width', String(editorWidth)) } catch { /* ignore */ }
+            }
+            document.addEventListener('mousemove', onMove)
+            document.addEventListener('mouseup', onUp)
+          }}
+          style={{ display: 'none' }}
+          className="w-1 shrink-0 cursor-col-resize bg-border-subtle transition-colors hover:bg-accent/50"
+        />
         {/* Persistent split editor pane */}
         <div
           ref={paneRef}
           className="shrink-0 overflow-hidden border-l border-border-subtle bg-surface-raised"
           style={{ width: 0, visibility: 'hidden' }}
         >
-          <div className="h-full w-[520px]">
+          <div className="h-full" style={{ width: editorWidth }}>
             {selectedBlock ? (
               <>
                 <div className="flex h-11 items-center justify-between border-b border-border-subtle px-3">

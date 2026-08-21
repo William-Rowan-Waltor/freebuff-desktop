@@ -22,7 +22,9 @@ import { useBlocksStore } from '@/store/useBlocksStore'
 import { useCreateBlock } from '@/lib/create'
 import type { Block } from '@/types'
 
-const SIDEBAR_WIDTH = 272
+const DEFAULT_SIDEBAR_WIDTH = 272
+const MIN_SIDEBAR_WIDTH = 180
+const MAX_SIDEBAR_WIDTH = 480
 
 function fileIcon(extension: string | null) {
   switch (extension?.toLowerCase()) {
@@ -59,6 +61,18 @@ function navIcon(type: Block['type']) {
 
 export default function Sidebar() {
   const asideRef = useRef<HTMLElement>(null)
+  const resizeRef = useRef<HTMLDivElement>(null)
+  // Resizable sidebar width (persisted to localStorage).
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('sidebar-width')
+      if (saved) {
+        const n = Number(saved)
+        if (n >= MIN_SIDEBAR_WIDTH && n <= MAX_SIDEBAR_WIDTH) return n
+      }
+    } catch { /* ignore */ }
+    return DEFAULT_SIDEBAR_WIDTH
+  })
   const uploadRef = useRef<HTMLInputElement>(null)
   const isSidebarOpen = useWorkspaceStore((state) => state.isSidebarOpen)
   const setSidebarOpen = useWorkspaceStore((state) => state.setSidebarOpen)
@@ -87,11 +101,11 @@ export default function Sidebar() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const ctx = gsap.context(() => {
       if (reduce) {
-        gsap.set(aside, { x: isSidebarOpen ? 0 : -SIDEBAR_WIDTH, visibility: isSidebarOpen ? 'visible' : 'hidden' })
+        gsap.set(aside, { x: isSidebarOpen ? 0 : -sidebarWidth, visibility: isSidebarOpen ? 'visible' : 'hidden' })
         return
       }
       gsap.to(aside, {
-        x: isSidebarOpen ? 0 : -SIDEBAR_WIDTH,
+        x: isSidebarOpen ? 0 : -sidebarWidth,
         visibility: isSidebarOpen ? 'visible' : 'hidden',
         duration: 0.45,
         ease: 'power3.inOut',
@@ -99,7 +113,7 @@ export default function Sidebar() {
     }, aside)
 
     return () => ctx.revert()
-  }, [isSidebarOpen])
+  }, [isSidebarOpen, sidebarWidth])
 
   const openBlock = useCallback(
     (block: Block) => {
@@ -123,8 +137,8 @@ export default function Sidebar() {
   return (
     <aside
       ref={asideRef}
-      className="fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col border-r border-border-subtle bg-surface"
-      style={{ transform: 'translateX(-272px)', visibility: 'hidden' }}
+      className="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border-subtle bg-surface"
+      style={{ width: sidebarWidth, transform: `translateX(-${sidebarWidth}px)`, visibility: 'hidden' }}
     >
       <div className="flex h-14 items-center gap-2.5 border-b border-border-subtle px-4">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
@@ -272,6 +286,30 @@ export default function Sidebar() {
           </span>
         )}
       </div>
+      {/* Resize handle — right edge of sidebar */}
+      <div
+        ref={resizeRef}
+        role="separator"
+        aria-label="Kéo để chỉnh kích thước sidebar"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          const startX = e.clientX
+          const startW = sidebarWidth
+          const onMove = (ev: MouseEvent) => {
+            const dx = ev.clientX - startX
+            const newW = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, startW + dx))
+            setSidebarWidth(newW)
+          }
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove)
+            document.removeEventListener('mouseup', onUp)
+            try { localStorage.setItem('sidebar-width', String(sidebarWidth)) } catch { /* ignore */ }
+          }
+          document.addEventListener('mousemove', onMove)
+          document.addEventListener('mouseup', onUp)
+        }}
+        className="absolute right-0 top-0 z-50 h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-accent/50"
+      />
     </aside>
   )
 }
