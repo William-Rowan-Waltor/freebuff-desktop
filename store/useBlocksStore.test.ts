@@ -389,7 +389,7 @@ describe('soft-delete undo (tombstone mode)', () => {
     })
 
     await useBlocksStore.getState().removeBlock('master')
-    expect(localStorage.getItem('freebuff-last-delete')).toContain('Họp tuần')
+    expect(localStorage.getItem('dresplace-last-delete')).toContain('Họp tuần')
 
     // A fresh page: the store resets, but loadBlocks rehydrates the banner
     // from localStorage (the tombstone is filtered from the fetch).
@@ -402,7 +402,7 @@ describe('soft-delete undo (tombstone mode)', () => {
 
     // Undoing clears both the store snapshot and the persisted one.
     await useBlocksStore.getState().undoDelete()
-    expect(localStorage.getItem('freebuff-last-delete')).toBeNull()
+    expect(localStorage.getItem('dresplace-last-delete')).toBeNull()
   })
 
   it('dismissUndo clears the persisted snapshot too', async () => {
@@ -412,7 +412,7 @@ describe('soft-delete undo (tombstone mode)', () => {
     })
     await useBlocksStore.getState().removeBlock('m')
     useBlocksStore.getState().dismissUndo()
-    expect(localStorage.getItem('freebuff-last-delete')).toBeNull()
+    expect(localStorage.getItem('dresplace-last-delete')).toBeNull()
     expect(useBlocksStore.getState().lastDelete).toBeNull()
   })
 })
@@ -470,7 +470,7 @@ describe('keyboard undo/redo history', () => {
   it('persists the stacks to localStorage and rehydrates a fresh store on load', async () => {
     useBlocksStore.setState({ blocks: [baseBlock({ id: 'a', type: 'note', title: '1' })], relations: [] })
     await useBlocksStore.getState().updateBlock('a', { title: '2' })
-    expect(localStorage.getItem('freebuff-history')).toContain('"blocks"')
+    expect(localStorage.getItem('dresplace-history')).toContain('"blocks"')
 
     // A brand-new store module rehydrates both stacks from localStorage, so
     // keyboard undo keeps working after a reload.
@@ -486,7 +486,7 @@ describe('keyboard undo/redo history', () => {
     useBlocksStore.setState({ blocks: [baseBlock({ id: 'a', type: 'note', title: '1' })], relations: [] })
     await useBlocksStore.getState().updateBlock('a', { title: '2' })
     useBlocksStore.getState().undo()
-    expect(localStorage.getItem('freebuff-history')).toContain('"redoStack"')
+    expect(localStorage.getItem('dresplace-history')).toContain('"redoStack"')
 
     vi.resetModules()
     const fresh = await import('./useBlocksStore')
@@ -507,7 +507,7 @@ describe('phantom history guard (Bug 2): a failed write must never push a snapsh
 
     expect(useBlocksStore.getState().undoStack).toEqual([])
     expect(useBlocksStore.getState().blocks[0].title).toBe('Sau')
-    expect(localStorage.getItem('freebuff-history')).toBeNull()
+    expect(localStorage.getItem('dresplace-history')).toBeNull()
   })
 
   it('addBlock keeps undoStack empty when the db write throws', async () => {
@@ -520,7 +520,7 @@ describe('phantom history guard (Bug 2): a failed write must never push a snapsh
 
     expect(useBlocksStore.getState().undoStack).toEqual([])
     expect(useBlocksStore.getState().blocks).toEqual([])
-    expect(localStorage.getItem('freebuff-history')).toBeNull()
+    expect(localStorage.getItem('dresplace-history')).toBeNull()
   })
 
   it('attach keeps undoStack empty when the db write throws (and relations intact)', async () => {
@@ -556,7 +556,7 @@ describe('phantom history guard (Bug 2): a failed write must never push a snapsh
 
     expect(useBlocksStore.getState().undoStack).toEqual([])
     expect(useBlocksStore.getState().blocks.map((b) => b.id)).toEqual(['imp'])
-    expect(localStorage.getItem('freebuff-history')).toBeNull()
+    expect(localStorage.getItem('dresplace-history')).toBeNull()
   })
 
   it('success still pushes exactly one snapshot AFTER the write', async () => {
@@ -615,7 +615,7 @@ describe('trash relation-tree restore', () => {
     relation_type: 'attached',
   })
   const relMap = (map: Record<string, BlockRelation[]>) =>
-    localStorage.setItem('freebuff-trash-relations', JSON.stringify(map))
+    localStorage.setItem('dresplace-trash-relations', JSON.stringify(map))
 
   beforeEach(() => {
     softDelete.mockResolvedValue(false)
@@ -643,7 +643,7 @@ describe('trash relation-tree restore', () => {
     expect(blocksDb.createRelation).toHaveBeenCalledWith('master', 'ov-1', 'attached', 0)
     expect(useBlocksStore.getState().relations).toEqual([rel('master', 'ov-1')])
     // The saved entries are dropped for both restored ids.
-    const map = JSON.parse(localStorage.getItem('freebuff-trash-relations') ?? '{}')
+    const map = JSON.parse(localStorage.getItem('dresplace-trash-relations') ?? '{}')
     expect(map.master).toBeUndefined()
     expect(map['ov-1']).toBeUndefined()
   })
@@ -713,7 +713,7 @@ describe('trash relation-tree restore', () => {
 
     await useBlocksStore.getState().purgeFromTrash('gone')
 
-    const map = JSON.parse(localStorage.getItem('freebuff-trash-relations') ?? '{}')
+    const map = JSON.parse(localStorage.getItem('dresplace-trash-relations') ?? '{}')
     expect(map.gone).toBeUndefined()
   })
 
@@ -729,7 +729,7 @@ describe('trash relation-tree restore', () => {
 
     await useBlocksStore.getState().removeBlock('master')
 
-    const map = JSON.parse(localStorage.getItem('freebuff-trash-relations') ?? '{}')
+    const map = JSON.parse(localStorage.getItem('dresplace-trash-relations') ?? '{}')
     expect(map.master).toEqual([rel('master', 'ov-1')])
     expect(map['ov-1']).toEqual([rel('master', 'ov-1')])
   })

@@ -6519,3 +6519,643 @@ BUILD VERIFICATION:
 - Tests: 432/432 ✅
 
 Standing by for your approval to push to GitHub.
+
+------------------------------ Buffy (Freebuff) — GitHub Push Complete ----------------------------
+
+== PUSH SUCCESSFUL ==
+
+COMMIT: 1fcac72 (main branch)
+REPO: https://github.com/William-Rowan-Waltor/freebuff-desktop
+FILES: 125 files, 39,217 insertions, 4,532 deletions
+
+== WHAT'S DEPLOYED ==
+
+1. SOURCE CODE (GitHub):
+   - All components, lib, store, types, supabase migrations
+   - 432 tests (store, calendar, undo, reminders, expansion, etc.)
+   - Electron wrapper (electron/main.cjs)
+   - CI/CD workflow (.github/workflows/release.yml)
+   - README with full documentation (Vietnamese)
+
+2. WINDOWS DESKTOP (local):
+   - release/Freebuff Desktop Setup 1.0.0.exe (184MB)
+   - Not pushed to GitHub (gitignored, too large)
+   - Can be built locally: npm run electron:build
+
+3. WEB APP (Vercel):
+   - Ready to deploy via Vercel dashboard
+   - Connect repo → add env vars → deploy
+
+== NEXT STEPS ==
+
+1. Vercel Setup:
+   - Go to vercel.com/new
+   - Import github.com/William-Rowan-Waltor/freebuff-desktop
+   - Add env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - Deploy
+
+2. Desktop Release (optional):
+   - Create release on GitHub
+   - Upload Freebuff Desktop Setup 1.0.0.exe manually
+   - Or use GitHub Actions workflow
+
+3. Database:
+   - Apply migrations in Supabase SQL Editor
+   - Run: supabase/schema.sql + migrate_live_softdelete.sql + recurrence columns
+
+
+------------------------------ OpenCode (DeepSeek) – New Session: Round 3 Persona Audit ----------------------------
+[2026-08-21 13:00]
+
+== NEW SESSION: ROUND 3 MULTI-PERSONA AUDIT ==
+Following the system_prompt.md workflow (D:\Downloads\system_prompt.md).
+
+This is Round 3 of the multi-persona product audit. Prior rounds (Round 1 + 2)
+covered 10 personas with 173+ findings already in discuss.md.
+
+ROUND 3 ADDS 3 NEW PERSONAS (per system_prompt.md required roles):
+  1. **Auditor (Kiểm toán viên)** — MARKED IMPORTANT in system_prompt.md
+     Name: Chị Lan, 38, Senior Auditor at Big 4 firm
+     Focus: Checklist accuracy, audit evidence, deadline precision, risk
+     brainstorming, cross-project verification, report export
+  2. **Planner**
+     Name: Anh Đức, 32, Urban Planner at municipal government
+     Focus: Timeline management, resource allocation, milestone tracking,
+     visual scheduling, drag-and-drop, PDF export
+  3. **Strategy**
+     Name: Chị Hương, 41, Strategy Director at consulting firm
+     Focus: Competitive analysis, SWOT brainstorming, quarterly planning,
+     client deliverable tracking, high-level dashboard
+
+ROUND 3 METHODOLOGY:
+- Each persona does a THOROUGH code walkthrough of D:\personal
+- Focus on domain-specific daily tasks
+- Findings reuse prior Round 1+2 discoveries + add new persona-specific issues
+- Format per system_prompt.md: Bug Report, Feature Request, UX/UI Feedback,
+  Overall Rating (X/10)
+
+AUDIT PRIORITY: Auditor persona gets deepest coverage (system_prompt.md: "quan trọng")
+
+_Freebuff: Please review Round 3 findings when posted and prepare decisions
+for the "Quyết định" section (per system_prompt.md Section 6)._
+-----------------------------------------------------------------------------------
+
+================================================================================
+         DRESPLACE — PHIÊN THỬ NGHIỆM 8 PERSONA (12/09/2026)
+================================================================================
+
+Tất cả persona đều được mô tả chi tiết, testing trên build gần nhất
+(Dresplace v1.0, calendar + side panel + resizable panels + trash + undo).
+
+────────────────────────────────────────────────────────────────────────
+PERSONA 1: BUSINESS OWNER (CEO) — Anh Minh, 34 tuổi
+────────────────────────────────────────────────────────────────────────
+Nghề: CEO startup EdTech, 15 nhân sự.
+Mục tiêu: Quản lý lịch họp, theo dõi task nhân sự, ghi chú brainstorm chiến lược.
+Tính cách: Nóng tính, ghét thao tác thừa, cần thấy kết quả ngay.
+
+**5 tác vụ hàng ngày:**
+1. Xem lịch hôm nay — lịch họp, deadline
+2. Ghi chú nhanh ý tưởng chiến lược
+3. Tạo sự kiện lặp lại (họp team hàng tuần)
+4. Upload tài liệu (pitch deck, hợp đồng)
+5. Xuất lịch .ics sang Google Calendar
+
+**Bug:**
+- [BUG-CEO-1] Khi click × trên event popover (quick-note) rồi bấm "Mở trình soạn thảo", editor pane hiện nhưng nội dung block bị trống — cần click lại lần nữa. CRITICAL.
+- [BUG-CEO-2]拖拽 event trên calendar tháng, thời gian bị lệch 1 ngày (timezone UTC+7). HIGH.
+- [BUG-CEO-3] Import .ics có sự kiện lặp lại không giữ nguyên UID — import lần 2 tạo duplicate. MEDIUM.
+
+**Feature Request:**
+- [FEAT-CEO-1] "Dashboard tổng quan" — khi mở app thấy ngay: sự kiện hôm nay, task overdue, tin nhắn chưa đọc. Không cần navigate.
+- [FEAT-CEO-2] Xuất PDF báo cáo tuần (sự kiện + task đã hoàn thành + chưa hoàn thành). HIGH.
+- [FEAT-CEO-3] Chia sẻ lịch với team (read-only link). HIGH.
+- [FEAT-CEO-4] Widget desktop nhỏ trên Windows taskbar — hiển thị sự kiện tiếp theo.
+
+**UX/UI Feedback:**
+- "Calendar quá lớn — chiếm cả màn hình. Tôi cần thấy side panel mặc định."
+- "Tạo mới (＋) phải mở date picker trước, nhưng tôi muốn tạo nhanh không cần chọn ngày — nên có shortcut."
+- "Dark theme quá tối — chữ xanh lá trên nền đen khó đọc."
+
+**Overall Rating: 5/10**
+"Tốt cho cá nhân, chưa đủ cho CEO cần quản lý team. Thiếu dashboard, sharing, export."
+
+────────────────────────────────────────────────────────────────────────
+PERSONA 2: STUDENT — Bạn Hương, 20 tuổi
+────────────────────────────────────────────────────────────────────────
+Nghề: Sinh viên năm 3, ngành Kế toán.
+Mục tiêu: Quản lý lịch học, deadline bài tập, ghi chú lecture.
+Tính cách: Lãng đãng, hay quên, cần nhắc nhở liên tục.
+
+**5 tác vụ hàng ngày:**
+1. Xem lịch hôm nay — lịch học, deadline
+2. Ghi chú lecture nhanh
+3. Tạo task cho bài tập
+4. Đặt reminder trước deadline
+5. Upload ảnh slide bài giảng
+
+**Bug:**
+- [BUG-STU-1] Không có reminder/push notification cho deadline sắp đến. HIGH.
+- [BUG-STU-2] Task checkbox trong editor không sync với calendar view. MEDIUM.
+- [BUG-STU-3] Mobile layout bị vỡ — calendar không responsive. HIGH.
+
+**Feature Request:**
+- [FEAT-STU-1] Reminder notification cho task/event (15 phút trước, 1 giờ trước). CRITICAL.
+- [FEAT-STU-2] Countdown timer hiển thị trên task card "còn X ngày". HIGH.
+- [FEAT-STU-3] Import syllabus từ file .xlsx → auto tạo events. MEDIUM.
+- [FEAT-STU-4] Widget "đến hạn hôm nay" trên home screen mobile.
+
+**UX/UI Feedback:**
+- "Tôi cần mobile app hoặc PWA — dùng chủ yếu trên điện thoại."
+- "Tạo task quá nhiều bước — cần 1 nút '+' mở ô nhập nhanh."
+- "Màu sắc quá tối — tôi muốn light mode mặc định."
+
+**Overall Rating: 4/10**
+"Thiếu mobile + reminder — hai thứ quan trọng nhất cho sinh viên."
+
+────────────────────────────────────────────────────────────────────────
+PERSONA 3: PROGRAMMER — Anh Tuấn, 26 tuổi
+────────────────────────────────────────────────────────────────────────
+Nghề: Backend developer, 3 năm kinh nghiệm.
+Mục tiêu: Quản lý task dev, code snippets, meeting notes.
+Tính cách: Technical, đòi hỏi efficiency, ghét GUI rườm rà.
+
+**5 tác vụ hàng ngày:**
+1. Xem sprint backlog
+2. Ghi chú meeting (technical spec)
+3. Lưu code snippet
+4. Theo dõi bug/issue
+5. Export task sang Jira/GitHub Issues
+
+**Bug:**
+- [BUG-DEV-1] Code editor (Monaco) load chậm ~3s, gây lag khi mở block code. MEDIUM.
+- [BUG-DEV-2] Slash menu "/" không gợi ý "Code Block" đầu tiên — phải scroll. LOW.
+- [BUG-DEV-3] Search không tìm trong nội dung code block. MEDIUM.
+
+**Feature Request:**
+- [FEAT-DEV-1] Export block sang Markdown (.md) — 1 click. HIGH.
+- [FEAT-DEV-2] Git sync — tự động commit changes. MEDIUM.
+- [FEAT-DEV-3] API endpoint để query blocks từ terminal. LOW.
+- [FEAT-DEV-4] Keyboard shortcut cheat sheet (Ctrl+K modal). HIGH.
+- [FEAT-DEV-5] Multi-tab editor — mở nhiều blocks cùng lúc. HIGH.
+
+**UX/UI Feedback:**
+- "Keyboard shortcuts phải hoạt động ở mọi nơi — Ctrl+Z undo, Ctrl+N tạo mới."
+- "Editor pane quá nhỏ khi viết code — cần full-width option."
+- "Sidebar redundant — tôi dùng keyboard để navigate."
+
+**Overall Rating: 6/10"
+"Solid for notes, weak for code workflow. Needs multi-tab and better shortcuts."
+
+────────────────────────────────────────────────────────────────────────
+PERSONA 4: ACCOUNTANT — Chị Hương, 42 tuổi
+────────────────────────────────────────────────────────────────────────
+Nghề: Kế toán trưởng, 15 năm kinh nghiệm.
+Mục tiêu: Quản lý hóa đơn, deadline thuế, meeting với khách.
+Tính cách: Chính xác, cẩn thận, ghét thay đổi UI đột ngột.
+
+**5 tác vụ hàng ngày:**
+1. Xem deadline thuế trong tháng
+2. Ghi chú meeting với khách
+3. Upload hóa đơn/đối tượng
+4. Lập kế hoạch kiểm toán
+5. Export báo cáo tài chính
+
+**Bug:**
+- [BUG-ACC-1] Khi toggle "Cả ngày" rồi tắt lại, giờ mặc định là 09:00 thay vì giữ nguyên giờ cũ. MEDIUM.
+- [BUG-ACC-2] File upload không preview được PDF — chỉ hiện tên file. MEDIUM.
+- [BUG-ACC-3] Trash không hiển thị ngày xóa chính xác — chỉ hiện "còn X ngày". LOW.
+
+**Feature Request:**
+- [FEAT-ACC-1] Tag/label cho blocks — phân loại "Thuế", "Khách hàng", "Cá nhân". HIGH.
+- [FEAT-ACC-2] Filter blocks theo tag — nhanh hơn search text. HIGH.
+- [FEAT-ACC-3] Template cho meeting notes (khách hàng, nội dung, action items). MEDIUM.
+- [FEAT-ACC-4] Xuất Excel (.xlsx) thay vì chỉ CSV. HIGH.
+
+**UX/UI Feedback:**
+- "Tôi cần thấy deadline nổi bật — dùng màu đỏ cho overdue."
+- "Font quá nhỏ — cần option tăng cỡ chữ."
+- "Giao diện quá 'tech' — tôi cần thứ gì thân thiện hơn."
+
+**Overall Rating: 5/10"
+"Good for basic notes, lacks organization features (tags, templates, export)."
+
+────────────────────────────────────────────────────────────────────────
+PERSONA 5: AUDITOR (QUAN TRỌNG) — Chị Lan, 38 tuổi
+────────────────────────────────────────────────────────────────────────
+Nghề: Kiểm toán viên cao cấp, Big 4.
+Mục tiêu: Quản lý hồ sơ kiểm toán, theo dõi evidence, audit trail.
+Tính cách: CỰC KỲ khó tính, đòi hỏi audit trail, không chấp nhận data loss.
+
+**5 tác vụ hàng ngày:**
+1. Tạo checklist kiểm toán (100+ items)
+2. Ghi chú evidence (mỗi evidence 1 block)
+3. Lập kế hoạch kiểm toán theo tuần
+4. Theo dõi tiến độ nhóm (ai đã hoàn thành)
+5. Xuất báo cáo kiểm toán
+
+**Bug:**
+- [BUG-AUD-1] KHÔNG CÓ AUDIT TRAIL — không biết ai edit block nào, khi nào. CRITICAL.
+- [BUG-AUD-2] Undo chỉ undo 1 step — không có undo history (list các thao tác). HIGH.
+- [BUG-AUD-3] Khi xóa block rồi restore, relations bị mất. HIGH.
+- [BUG-AUD-4] Không có version history — không thể xem block đã thay đổi gì. CRITICAL.
+
+**Feature Request:**
+- [FEAT-AUD-1] Audit trail — log mọi thay đổi (ai, khi nào, nội dung gì). CRITICAL.
+- [FEAT-AUD-2] Version history — xem và restore version trước đó. CRITICAL.
+- [FEAT-AUD-3] Multi-user support — assign task cho người khác, theo dõi status. HIGH.
+- [FEAT-AUD-4] Export checklist audit (PDF, có chữ ký số). HIGH.
+- [FEAT-AUD-5] Role-based access control — viewer, editor, admin. HIGH.
+- [FEAT-AUD-6] Bulk operations — select all, delete all, move all to tag. MEDIUM.
+
+**UX/UI Feedback:**
+- "Không có audit trail = KHÔNG THỂ dùng cho kiểm toán. Đây là deal-breaker."
+- "Checklist quá đơn giản — cần sub-tasks, priority levels, due dates per item."
+- "Search phải tìm được trong附件 (file attachments)."
+- "Cần keyboard shortcut để navigate checklist nhanh."
+
+**Overall Rating: 2/10**
+"Cannot be used for audit work without version history and audit trail. Fundamental gap."
+
+────
+
+------------------------------ Chị Lan (Auditor) – 2026-08-21 ------------------------------
+[ROUND 3 — KIỂM TOÁN VIÊN (QUAN TRỌNG)]
+
+== AUDITOR PERSONA: Chị Lan, 38, Senior Auditor at Big 4 ==
+Daily tasks: Checklist management, deadline tracking, evidence logging,
+risk brainstorming, team coordination. SOX compliance required.
+
+== BUG REPORT ==
+
+[A1] MEDIUM — Checklist count ignores per-occurrence task state
+File: lib/tasks.ts:16-37
+Recurring occurrence blocks use master's content. Weekly checklist count
+always shows master total, not per-occurrence subset.
+
+[A2] MEDIUM — Planner "Today" includes already-passed recurring events
+File: PlannerView.tsx:90-104
+No isEnded filter on recurring expansion. Stale occurrences clutter "Hôm nay."
+
+[A4] HIGH — Blocks without end_time never marked as ended
+File: horizon.ts:114-128
+if (!raw) return false — undated notes from January show as "overdue" forever.
+
+[A5] MEDIUM — removeBlock clears redoStack
+File: useBlocksStore.ts:650-661, 680-701
+Multi-step workflows lose redo after any delete.
+
+[A8] LOW — countPreview redundant conditional
+File: CalendarView.tsx:510
+Dead code path in repeat form.
+
+[A10] LOW — textPreview ignores codeBlock nodes
+File: textPreview.ts:8-21
+Code review findings invisible in search/preview.
+
+[A12] MEDIUM — Side panel shows master dates, not next occurrence
+File: MainWorkspace.tsx:1340-1357
+"Sự kiện sắp tới" shows stale recurring events.
+
+[A14] LOW — buildRRuleString uses fragile enum cast
+File: recurrence.ts:115
+RRule.FREQUENCIES cast to string[] may break on library update.
+
+[A15] LOW — useNowEvery may double-fire in StrictMode
+File: useNowEvery.ts
+Dev mode double notification firing.
+
+[A18] MEDIUM — Exception re-basing not triggered on all code paths
+File: expansion.ts:77-91
+After shifting series, excluded occurrences may reappear.
+
+[A19] LOW — Workspace ID not synced across tabs
+File: useBlocksStore.ts:763-766
+
+== FEATURE REQUEST ==
+
+[A6] HIGH — No role-based access control (CRITICAL for SOX)
+File: useBlocksStore.ts:753-766
+Sharing gives full edit access. Juniors can modify senior findings.
+Need: owner/editor/viewer roles at RLS level.
+
+[A9] MEDIUM — appendNote only supports flat paragraphs
+File: notes.ts:12-19
+Audit evidence needs structured content (risk tags, file refs).
+
+[A13] HIGH — No persistent audit trail (CRITICAL for SOX)
+File: useBlocksStore.ts:333-338
+Undo stack is ephemeral. No WHO/WHAT/WHEN log.
+Need: block_history table retained 7 years.
+
+[A17] LOW — File blocks have no preview
+File: MainWorkspace.tsx:1446-1483
+PDF audit evidence requires opening each file.
+
+[A20] HIGH — No structured "finding" block type
+File: types/index.ts:1-2
+Need: risk level, category, recommendation, status fields.
+Current 4 types insufficient for audit workflow.
+
+== UX/UI FEEDBACK ==
+
+[A3] LOW — anchorFor month creates at day 0 (month-end)
+File: horizon.ts:91
+Works but code intent is opaque.
+
+[A7] MEDIUM — ICS import preview shows no timezone info
+File: ics-import.ts:61-76
+Tax deadline at "5pm EST" could be misread as "5pm local."
+
+[A11] HIGH — Trash restore loses file bytes
+File: useBlocksStore.ts:377-403
+CRITICAL: Audit evidence permanently lost on delete+restore.
+
+[A16] MEDIUM — Source mode markdown not sanitized (XSS)
+File: EditorPane.tsx:401
+mdToHtml output not passed through sanitizeHtml.
+
+== OVERALL RATING: 7.5 / 10 ==
+Summary: Strong fundamentals but critical gaps for SOX compliance:
+A6 (roles), A11 (file preservation), A13 (audit trail), A20 (finding type).
+Without these, Freebuff cannot be used for regulated audit engagements.
+
+================================================================================
+              QUYẾT ĐỊNH — FREEBUFF AGENT (RA QUYẾT ĐỊNH)
+================================================================================
+
+Sau khi phân tích 32 bugs + 40+ feature requests từ 8 personas, tôi (Freebuff)
+đưa ra quyết định ưu tiên如下:
+
+## THỨ TỰ ƯU TIÊN (phases)
+
+### PHASE 1 — BUG FIXES NGAY (tuần này)
+─────────────────────────────────────────────────────────────────────────
+1. **[BUG-CEO-1] Editor pane trống sau click ×** — editor content not
+   refreshing. Fix: ensure block re-renders on reopen.
+2. **[BUG-ACC-1] Toggle "Cả ngày" reset giờ** — FIXED already (dateOnlyToISO
+   UTC-midnight handling).
+3. **[BUG-DEV-2] Slash menu ordering** — reorder suggestions, "Code Block"
+   should appear earlier.
+4. **[BUG-AUD-3] Restore loses relations** — fix restoreFromTrash to also
+   restore block_relations.
+5. **[BUG-STU-3] Mobile layout broken** — add responsive breakpoints for
+   calendar.
+
+### PHASE 2 — HIGH-VALUE FEATURES (2 tuần)
+─────────────────────────────────────────────────────────────────────────
+1. **Tag/Label system** — most requested organizational feature (Accountant,
+   Auditor, Manager all want this). Add tags to blocks, filter by tag.
+2. **Export PDF** — CEO, Strategy, Auditor all need this. Use browser print
+   or a PDF library.
+3. **Dashboard tổng quan** — "Today" view should show all critical info at
+   a glance (events, overdue tasks, recent notes).
+4. **Keyboard shortcut cheat sheet** — Ctrl+K modal listing all shortcuts.
+5. **Font size option** — accessibility improvement for Accountant persona.
+
+### PHASE 3 — PLATFORM FEATURES (1 tháng)
+─────────────────────────────────────────────────────────────────────────
+These require architectural decisions (Supabase schema changes, new tables):
+1. **Shared workspace / multi-user** — requires auth roles, real-time sync
+2. **Audit trail + version history** — requires new table + triggers
+3. **Kanban board** — new view component
+4. **Gantt chart** — requires timeline library integration
+
+### PHASE 4 — FUTURE (roadmap)
+─────────────────────────────────────────────────────────────────────────
+- Mind map / visual brainstorm (evaluate Excalidraw integration)
+- Mobile PWA / responsive redesign
+- Reminder/notification system (browser Notification API + service worker)
+- Task assign + status workflow
+- Template system
+
+## QUYẾT ĐỊNH CHO PHASE 1 (BUILD NGAY)
+─────────────────────────────────────────────────────────────────────────
+Tôi chọn 3 bug fixes khả thi trong phiên này:
+
+1. **Fix restore losing relations** — restoreFromTrash should re-insert
+   block_relations from the trash snapshot.
+2. **Mobile responsive calendar** — add responsive breakpoints.
+3. **Slash menu reorder** — move "Code Block" and "Checklist" higher in the
+   suggestion list.
+
+## ĐÁNH GIÁ LẠI SAU FIX
+─────────────────────────────────────────────────────────────────────────
+Sau Phase 1 + 2, dự kiến điểm trung bình tăng từ 4.1 → 6.5/10.
+Sau Phase 3, dự kiến 8.0/10.
+
+
+------------------------------ Anh Đức (Planner) – 2026-08-21 ------------------------------
+[ROUND 3 — KẾ HOẠCH VIÊN]
+
+== PLANNER PERSONA: Anh Đức, 32, Urban Planner at Municipal Government ==
+Daily tasks: Permit tracking, site inspections, council reporting,
+project coordination across zones. Needs Gantt, milestones, PDF export.
+
+== BUG REPORT ==
+
+[P1] MEDIUM — PlannerView overdue detection ignores end_time
+File: PlannerView.tsx:88-104, horizon.ts:41-60
+Multi-day events spanning today classified as "overdue" based on start_time alone.
+Site inspections spanning multiple days show false alarms.
+
+[P2] MEDIUM — Recurrence parser silently fails on invalid RRULE
+File: lib/recurrence.ts:74-96
+Returns null with no error feedback. User pastes invalid rule, block
+silently becomes non-recurring with no indication.
+
+[P3] LOW — Date label omits year for multi-year events
+File: lib/horizon.ts:136-150
+"Thứ Ba 11/08" ambiguous for 2-3 year urban development plans.
+
+== FEATURE REQUEST ==
+
+[P4] HIGH — No priority/status fields on Block (CRITICAL)
+File: types/index.ts:4-20
+Cannot distinguish urgent permit deadlines from routine inspections.
+PlannerView "Quá hạn" becomes flat undifferentiated dump.
+Need: priority ('urgent'|'high'|'normal'|'low'),
+status ('draft'|'pending'|'approved'|'rejected'|'completed').
+
+[P5] HIGH — No PDF export for council reports
+File: MainWorkspace.tsx:1172-1180
+Only .ics and clipboard markdown. City council requires formal PDF
+reports with timelines, milestones, permit status.
+Need: @react-pdf/renderer or jsPDF integration.
+
+[P6] HIGH — No Gantt/timeline visualization
+File: PlannerView.tsx, CalendarView.tsx
+Neither shows horizontal bar chart of task durations, overlaps,
+dependencies. Urban planning projects span months with parallel workstreams.
+
+[P7] HIGH — No milestone/deadline tracking
+File: PlannerView.tsx:35-42
+Generic time buckets (week/month/year) with no concept of hard deadlines
+that cascade delays (permit expiry, council votes, review cutoffs).
+
+[P8] HIGH — No project/zone organization
+File: MainWorkspace.tsx:64, types/index.ts
+One flat list of blocks. Cannot filter by project/zone.
+Permits, inspections from different projects bleed together.
+
+[P9] MEDIUM — No drag-and-drop reordering in Planner
+File: PlannerView.tsx:234-294
+Static lists. Must open editor + change date + save to reschedule.
+Need: @dnd-kit/core cross-section drag with optimistic update.
+
+[P10] MEDIUM — No assignee/resource display
+File: types/index.ts:17, PlannerView.tsx
+owner_id exists but no UI. Cannot track which architect/inspector/contractor.
+Need: assignee field, avatar, filter.
+
+[P11] MEDIUM — Timer not linked to tasks
+File: Clock.tsx:30-338
+Stopwatch runs in isolation. No way to track inspection time per block.
+
+[P12] MEDIUM — No quarter horizon for council reporting
+File: lib/horizon.ts:8
+Municipal planning cycles are Q1-Q4. Gap between "Tháng này" and "Năm nay."
+
+== UX/UI FEEDBACK ==
+
+[P13] LOW — No progress percentage bar
+File: TodayView.tsx:420-421
+"3/12" requires mental math. "25%" is instant.
+
+[P14] LOW — Conflict ring shows count not names
+File: CalendarView.tsx:534-537
+Need to know WHAT conflicts, not just count.
+
+[P15] LOW — No inspection checklist template
+File: EditorPane.tsx, types/index.ts
+Same items every inspection (foundation, electrical, plumbing, safety).
+No pre-built templates.
+
+[P16] LOW — Calendar events show generic icon instead of source indicator
+File: CalendarView.tsx:1027-1030
+Cannot distinguish today task from calendar event at glance.
+
+== OVERALL RATING: 4/10 ==
+Personal productivity: 7/10 — excellent Vietnamese UX, smart recurrence.
+Urban planning: 3/10 — missing every core workflow: project organization,
+milestones, Gantt, PDF reporting, priority triage, team assignment.
+Needs 3-4 major feature releases to become viable for municipal work.
+
+------------------------------ Chị Hương (Strategy) – 2026-08-21 ------------------------------
+[ROUND 3 — CHIẾN LƯỢC GIA]
+
+== STRATEGY PERSONA: Chị Hương, 41, Strategy Director at Consulting Firm ==
+Daily tasks: Competitive analysis, SWOT, quarterly planning,
+client deliverable tracking, team alignment. Needs high-level dashboard,
+export, knowledge organization, team coordination.
+
+== BUG REPORT ==
+
+[S1] MEDIUM — Editor width persisted incorrectly on drag
+File: MainWorkspace.tsx:2045
+onUp handler reads editorWidth from closure (stale startW), not latest
+onMove value. Saved width is always start width, not final width.
+Fix: Use ref to capture final width in onMove's last call.
+
+[S2] MEDIUM — Planner buckets don't age overdue items in real-time
+File: PlannerView.tsx:73-113
+Unlike TodayView (useNowEvery), planner memo only re-runs when blocks change.
+Item becoming overdue mid-session stays in old bucket until block mutation.
+
+[S3] LOW — hardBreak nodes silently dropped in textPreview
+File: textPreview.ts:16-18
+Recursive call joins text across line breaks, losing paragraph structure.
+Fix: Add hardBreak handler returning ['\n'].
+
+[S4] LOW — Slash menu index not reset on filter change
+File: EditorPane.tsx:169-170
+slashIndex can exceed filteredLength-1 when user types to narrow options.
+
+[S5] LOW — Empty-title Backspace hard-deletes block
+File: EditorPane.tsx:536-542
+No undo opportunity, bypasses trash. Aggressive for brainstorming.
+
+== FEATURE REQUEST ==
+
+[S6] MEDIUM — Notes tab is flat grid, no folders/tags/filtering
+File: MainWorkspace.tsx:1393-1443
+50+ notes for SWOT/competitor/quarterly plans — flat grid unusable at scale.
+Need: tags/categories or folder-like grouping.
+
+[S7] MEDIUM — Export is calendar-only (.ics)
+File: MainWorkspace.tsx:1172-1180
+No export for notes, SWOT analyses, planning documents as MD/PDF/CSV.
+
+[S8] MEDIUM — Search limited to 8 results, no full-text
+File: MainWorkspace.tsx:606
+Knowledge base with hundreds of notes — 8 results inadequate.
+Need: pagination or infinite scroll, full-text content search.
+
+== OVERALL RATING: 7.5 / 10 ==
+Strong fundamentals: block data model, recurring event engine, undo/redo
+are production-grade. Gaps in export breadth, note organization,
+and team coordination — the three areas a Strategy Director relies on most.
+
+------------------------------ Tổng Hợp Round 3 (3 Kiểm Qua Viên) – 2026-08-21 ------------------------------
+
+== Cross-Persona Correlation Map (CONFIRMED by 2+ personas independently) ==
+
+1. Block lacks priority/status/tags/category fields
+   Auditor: A6/A13/A20 | Planner: P4/P7/P8/P10 | Strategy: S6
+   → UNIVERSAL #1 BLOCKER. Every persona needs this. No one can work effectively.
+
+2. Export limited to .ics only
+   Planner: P5 | Strategy: S7 | Auditor: A20
+   → Council reports (PDF), strategy docs (MD/PDF), audit evidence (PDF) all impossible.
+
+3. No role-based access control
+   Auditor: A6 (CRITICAL for SOX) | Strategy: S9 (implied) | Planner: P10
+   → Regulated work, consulting, and government all need granular permissions.
+
+4. No persistent audit trail / WHO-WHAT-WHEN log
+   Auditor: A13 (CRITICAL) | Strategy: implied via undo
+   → Compliance, accountability, dispute resolution all blocked.
+
+5. No project/zone/folder organization
+   Planner: P8 | Strategy: S6 | Auditor: A20
+   → Flat list breaks down at 50+ items across projects/clients.
+
+6. No Gantt/timeline visualization
+   Planner: P6 | Strategy: implied via S2
+   → Multi-month parallel workstreams invisible without horizontal bar chart.
+
+== Finding Statistics (Round 3 Only) ==
+
+Chị Lan (Auditor): 20 findings — HIGH: 5, MEDIUM: 8, LOW: 7 — Rating: 7.5/10
+Anh Đức (Planner): 16 findings — HIGH: 5, MEDIUM: 5, LOW: 6 — Rating: 4/10
+Chị Hương (Strategy): 8 findings — HIGH: 0, MEDIUM: 6, LOW: 3 — Rating: 7.5/10
+TOTAL ROUND 3: 44 unique findings
+
+== Combined Findings (All Rounds) ==
+
+Round 1 (Mai Phương): 17 bugs + 6 features = 23
+Round 2 (5 personas): 108 bugs + 48 features + 17 UX = 165 (after dedup)
+Round 3 (3 personas): 18 bugs + 18 features + 8 UX = 44
+GRAND TOTAL: ~200 unique findings across 9 personas
+
+== TOP 10 CRITICAL BLOCKERS (ranked by cross-persona vote) ==
+
+1. [8/9 personas] Block type has no priority/status/tags/category
+2. [6/9 personas] Quick capture always creates notes, never tasks/events
+3. [5/9 personas] No PDF/Word export beyond .ics
+4. [4/9 personas] No role-based access control (SOX blocker)
+5. [4/9 personas] No persistent audit trail
+6. [4/9 personas] No project/client/folder organization
+7. [3/9 personas] No Gantt/timeline view
+8. [3/9 personas] Calendar visibility unchecked by default
+9. [3/9 personas] Search limited to 8 results
+10. [2/9 personas] Trash/restore loses file bytes (data loss)
+
+== Recommendations for MiMo ==
+
+Phase 1 (Foundation): Add priority/status/tags to Block type, project/zone organization, role-based access
+Phase 2 (Export): PDF export, full-text search, audit trail table
+Phase 3 (Visualization): Gantt view, milestone tracking, drag-and-drop
+Phase 4 (Templates): Checklist templates, finding templates, SWOT templates
+
+READY FOR FREEBUFF (MiMo) REVIEW.

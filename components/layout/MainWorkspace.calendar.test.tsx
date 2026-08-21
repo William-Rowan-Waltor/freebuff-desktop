@@ -971,7 +971,7 @@ await waitFor(() =>
     const master = { ...eventOnDay15(), id: 'del-master', title: 'Chuỗi đã xóa', deleted_at: '2026-08-10T00:00:00.000Z' }
     const override = { ...eventOnDay15(), id: 'del-ov', title: 'Lần đã xóa', deleted_at: '2026-08-10T00:00:00.000Z' }
     localStorage.setItem(
-      'freebuff-trash-relations',
+      'dresplace-trash-relations',
       JSON.stringify({
         'del-master': [{ parent_id: 'del-master', child_id: 'del-ov', relation_type: 'attached' }],
         'del-ov': [{ parent_id: 'del-master', child_id: 'del-ov', relation_type: 'attached' }],
@@ -1018,7 +1018,7 @@ await waitFor(() =>
         ),
     )
     await waitForText(container, 'Thùng rác trống')
-    localStorage.removeItem('freebuff-trash-relations')
+    localStorage.removeItem('dresplace-trash-relations')
   })
 
   it('batch-purges the whole trash selection after one confirmation', async () => {
@@ -1288,7 +1288,7 @@ await waitFor(() =>
   })
 
   it('checklist rows are individually selectable — unchecking one excludes it from the import', async () => {
-    localStorage.removeItem('freebuff-ics-history')
+    localStorage.removeItem('dresplace-ics-history')
     useBlocksStore.setState({ blocks: [], relations: [] })
     const { container } = render(<MainWorkspace />, { resetStores: false })
     const ics = [
@@ -1337,7 +1337,7 @@ await waitFor(() =>
   })
 
   it('role quick filters bulk-select every event of a series role, and Chọn tất cả restores them', async () => {
-    localStorage.removeItem('freebuff-ics-history')
+    localStorage.removeItem('dresplace-ics-history')
     useBlocksStore.setState({ blocks: [], relations: [] })
     const { container } = render(<MainWorkspace />, { resetStores: false })
     // Two standalone one-offs — the 'Sự kiện riêng' chip covers both.
@@ -1391,7 +1391,7 @@ await waitFor(() =>
   })
 
   it('a group name prefixes the imported events and labels the history record', async () => {
-    localStorage.removeItem('freebuff-ics-history')
+    localStorage.removeItem('dresplace-ics-history')
     useBlocksStore.setState({ blocks: [], relations: [] })
     const { container } = render(<MainWorkspace />, { resetStores: false })
     const ics = [
@@ -1445,7 +1445,7 @@ await waitFor(() =>
 
   it('Đã nhập rows show which blocks survive (Còn đủ / Còn x/y / Đã xóa hết)', async () => {
     localStorage.setItem(
-      'freebuff-ics-history',
+      'dresplace-ics-history',
       JSON.stringify([
         {
           id: 'rec-full',
@@ -1502,7 +1502,7 @@ await waitFor(() =>
   })
 
   it('Đã nhập tab lists the import (counts, file, timestamp) and undoes the last one wholesale', async () => {
-    localStorage.removeItem('freebuff-ics-history')
+    localStorage.removeItem('dresplace-ics-history')
     useBlocksStore.setState({ blocks: [], relations: [] })
     const { container } = render(<MainWorkspace />, { resetStores: false })
     const ics = [
@@ -1569,7 +1569,7 @@ await waitFor(() =>
       })
       await waitFor(() => useBlocksStore.getState().blocks.length === 0)
       await waitForText(container, 'Chưa có lần nhập nào')
-      expect(JSON.parse(localStorage.getItem('freebuff-ics-history') ?? '[]')).toEqual([])
+      expect(JSON.parse(localStorage.getItem('dresplace-ics-history') ?? '[]')).toEqual([])
     } finally {
       confirmSpy.mockRestore()
     }

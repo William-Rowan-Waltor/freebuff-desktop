@@ -712,6 +712,7 @@ export default function CalendarView({
         className="fc-app-shell"
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin, monarchThemePlugin]}
         initialView="dayGridMonth"
+        height="auto"
         headerToolbar={{
           left: 'prev,next today quickAdd',
           center: 'title',

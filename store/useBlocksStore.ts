@@ -31,14 +31,14 @@ import { supabase } from '@/lib/supabase/client'
 /** History cap for Ctrl/Cmd+Z across block edits (also the persisted cap). */
 const HISTORY_LIMIT = 30
 /** localStorage key for the last delete snapshot (banner survives reloads). */
-const LAST_DELETE_KEY = 'freebuff-last-delete'
+const LAST_DELETE_KEY = 'dresplace-last-delete'
 /** localStorage key for the undo/redo stacks (keyboard undo survives reloads). */
-const HISTORY_KEY = 'freebuff-history'
+const HISTORY_KEY = 'dresplace-history'
 /** localStorage key for relations removed at delete time, keyed by tombstone
  *  block id — trash restore re-creates them once both endpoints are live. */
-const TRASH_RELATIONS_KEY = 'freebuff-trash-relations'
+const TRASH_RELATIONS_KEY = 'dresplace-trash-relations'
 /** localStorage key for the purge history (items permanently deleted from trash). */
-const PURGE_HISTORY_KEY = 'freebuff-purge-history'
+const PURGE_HISTORY_KEY = 'dresplace-purge-history'
 /** Maximum number of purge history entries to keep. */
 const PURGE_HISTORY_LIMIT = 100
 
@@ -388,7 +388,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
         } catch (err) {
           // Best-effort: a storage hiccup must not abort the block delete or
           // skip the siblings, but the orphan should not go fully unnoticed.
-          console.error(`[freebuff] storage delete failed (orphan risk): ${path}`, err)
+          console.error(`[dresplace] storage delete failed (orphan risk): ${path}`, err)
         }
       }
     }

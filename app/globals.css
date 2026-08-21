@@ -405,3 +405,28 @@ body {
   opacity: 0.55;
   text-decoration: line-through;
 }
+
+/* ---- Mobile responsive ---- */
+@media (max-width: 768px) {
+  .fc-app-shell .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .fc-app-shell .fc-toolbar-title {
+    font-size: 14px !important;
+  }
+  .fc-app-shell .fc-button {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  .fc-app-shell .fc-daygrid-day {
+    padding: 2px !important;
+  }
+  .fc-app-shell .fc-event {
+    font-size: 10px !important;
+  }
+  .fc-app-shell .fc-col-header-cell {
+    padding: 4px 0 !important;
+    font-size: 11px !important;
+  }
+}

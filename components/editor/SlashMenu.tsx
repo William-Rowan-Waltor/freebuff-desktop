@@ -23,9 +23,15 @@ export interface SlashOption {
 export const SLASH_OPTIONS: SlashOption[] = [
   {
     id: 'taskList',
-    label: 'Danh sách việc cần làm',
+    label: 'Việc cần làm',
     icon: <ListChecks size={14} />,
     insert: (c) => c.toggleTaskList(),
+  },
+  {
+    id: 'codeBlock',
+    label: 'Khối mã',
+    icon: <CodeBlock size={14} />,
+    insert: (c) => c.setCodeBlock(),
   },
   {
     id: 'heading1',
@@ -47,13 +53,13 @@ export const SLASH_OPTIONS: SlashOption[] = [
   },
   {
     id: 'bulletList',
-    label: 'Danh sách gạch đầu dòng',
+    label: 'Gạch đầu dòng',
     icon: <ListBullets size={14} />,
     insert: (c) => c.toggleBulletList(),
   },
   {
     id: 'orderedList',
-    label: 'Danh sách đánh số',
+    label: 'Đánh số',
     icon: <ListNumbers size={14} />,
     insert: (c) => c.toggleOrderedList(),
   },
@@ -62,12 +68,6 @@ export const SLASH_OPTIONS: SlashOption[] = [
     label: 'Trích dẫn',
     icon: <Quotes size={14} />,
     insert: (c) => c.toggleBlockquote(),
-  },
-  {
-    id: 'codeBlock',
-    label: 'Khối mã',
-    icon: <CodeBlock size={14} />,
-    insert: (c) => c.setCodeBlock(),
   },
   {
     id: 'horizontalRule',
