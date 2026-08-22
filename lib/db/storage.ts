@@ -13,6 +13,14 @@ export async function uploadFile(file: File, prefix: string): Promise<UploadResu
   const path = `${prefix}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
   const { error } = await supabase.storage.from(BUCKET).upload(path, file)
   if (error) throw new Error(error.message)
+  // Try signed URL first (private bucket); fall back to public URL.
+  const { data: signed, error: signedErr } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 3600 * 24 * 7) // 7-day expiry
+  if (!signedErr && signed?.signedUrl) {
+    return { fileUrl: signed.signedUrl, filePath: path, fileExtension: extension }
+  }
+  // Fallback: public bucket (no signed URL needed)
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
   return { fileUrl: data.publicUrl, filePath: path, fileExtension: extension }
 }

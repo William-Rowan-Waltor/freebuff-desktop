@@ -29,7 +29,50 @@ const LANG_BY_EXT: Record<string, string> = {
   txt: 'plaintext',
   html: 'html',
   css: 'css',
+  sql: 'sql',
+  sh: 'shell',
+  bash: 'shell',
+  rb: 'ruby',
+  php: 'php',
+  swift: 'swift',
+  kt: 'kotlin',
+  dart: 'dart',
+  r: 'r',
+  lua: 'lua',
+  yaml: 'yaml',
+  yml: 'yaml',
+  xml: 'xml',
+  toml: 'ini',
+  ini: 'ini',
+  dockerfile: 'dockerfile',
 }
+
+const LANG_OPTIONS = [
+  { value: '', label: 'Tự phát hiện' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'go', label: 'Go' },
+  { value: 'java', label: 'Java' },
+  { value: 'c', label: 'C' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'shell', label: 'Shell/Bash' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'json', label: 'JSON' },
+  { value: 'yaml', label: 'YAML' },
+  { value: 'markdown', label: 'Markdown' },
+  { value: 'ruby', label: 'Ruby' },
+  { value: 'php', label: 'PHP' },
+  { value: 'swift', label: 'Swift' },
+  { value: 'kotlin', label: 'Kotlin' },
+  { value: 'dart', label: 'Dart' },
+  { value: 'r', label: 'R' },
+  { value: 'lua', label: 'Lua' },
+  { value: 'plaintext', label: 'Plain text' },
+]
 
 interface CodeEditorProps {
   block: Block
@@ -42,9 +85,19 @@ export default function CodeEditor({ block, onChange }: CodeEditorProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-9 items-center justify-between border-b border-border-subtle px-3">
-        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">
-          {block.file_extension ? `.${block.file_extension}` : 'code'}
-        </span>
+        <select
+          value={LANG_BY_EXT[block.file_extension ?? ''] ?? ''}
+          onChange={(e) => {
+            // Map language name back to file extension
+            const ext = Object.entries(LANG_BY_EXT).find(([, lang]) => lang === e.target.value)?.[0] ?? ''
+            onChange(block, { file_extension: ext || null })
+          }}
+          className="rounded border border-border-subtle bg-background px-1.5 py-0.5 font-mono text-[11px] text-zinc-300 outline-none focus:border-accent"
+        >
+          {LANG_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
         <span className="font-mono text-[11px] text-zinc-600">Ctrl+S để lưu</span>
       </div>
       <div className="min-h-0 flex-1">
