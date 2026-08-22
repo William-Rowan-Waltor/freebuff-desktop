@@ -45,7 +45,7 @@ import TodoChip from '@/components/planner/TodoChip'
 import { countTasks } from '@/lib/tasks'
 import { appendNote } from '@/lib/notes'
 import { useCreateBlock, type CreateKind } from '@/lib/create'
-import { textPreview } from '@/lib/textPreview'
+import { textPreview, contentText } from '@/lib/textPreview'
 import { useEventReminders } from '@/lib/reminders'
 import { useOverride, splitSeries } from '@/lib/override'
 import { excludeOccurrence, splitSeriesAt } from '@/lib/expansion'
@@ -603,11 +603,13 @@ export default function MainWorkspace() {
   const searchResults = useMemo(() => {
     const q = normalizeText(query.trim())
     if (!q) return []
+    // Haystack indexes the FULL content text (contentText), not the 160-char
+    // display preview — a keyword deep inside a long note must be findable.
     return blocks
       .map((block) => ({
         block,
         haystack: normalizeText(
-          `${block.title ?? ''} ${textPreview(block.content)} ${block.file_extension ?? ''}`,
+          `${block.title ?? ''} ${contentText(block.content)} ${block.file_extension ?? ''} ${block.tags ?? ''}`,
         ),
       }))
       .filter(({ haystack }) => haystack.includes(q))
@@ -797,6 +799,7 @@ export default function MainWorkspace() {
 
   // Ctrl/Cmd+Z undo (a pending delete banner undoes first), Ctrl/Cmd+Shift+Z
   // or Ctrl+Y redo — across block edits (calendar drags, splits, links, …).
+  // Ctrl/Cmd+Alt+N creates a new note (browsers reserve plain Ctrl+N).
   // Editable controls (title/datetime/code/editor) keep their native undo: the
   // handler bails when the focus is inside an input/textarea/contenteditable.
   useEffect(() => {
@@ -804,8 +807,13 @@ export default function MainWorkspace() {
       const mod = e.metaKey || e.ctrlKey
       if (!mod) return
       const target = e.target as HTMLElement | null
-      if (target?.closest('input, textarea, [contenteditable="true"]')) return
       const key = e.key.toLowerCase()
+      if (key === 'n' && e.altKey && !target?.closest('input, textarea, [contenteditable="true"]')) {
+        e.preventDefault()
+        void create('note')
+        return
+      }
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return
       if (key === 'z') {
         e.preventDefault()
         if (e.shiftKey) redo()
@@ -828,7 +836,7 @@ export default function MainWorkspace() {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [undo, redo])
+  }, [undo, redo, create])
 
   // Workspace-wide .ics export/import (event migration path). Import creates
   // masters, split continuations, and this-occurrence overrides through the
@@ -886,7 +894,7 @@ export default function MainWorkspace() {
     }
   }
   const exportWorkspaceIcs = () => {
-    downloadIcs('freebuff-events.ics', buildWorkspaceIcs(blocks, relations))
+    downloadIcs('dresplace-events.ics', buildWorkspaceIcs(blocks, relations))
   }
   // .ics import now goes through a confirm step: parse + preview first (no
   // blocks are created), flag which file references are dangling, let the
@@ -1097,17 +1105,20 @@ export default function MainWorkspace() {
           <SidebarSimple size={18} />
         </button>
 
-        <nav className="flex items-center gap-1" aria-label="Khu vực chính">
+        <nav
+          className="flex min-w-[200px] items-center gap-1 overflow-x-auto lg:flex-none lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Khu vực chính"
+        >
           {TAB_META.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
+              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 tab === key
                   ? 'bg-zinc-800 text-zinc-100'
                   : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
-              }`}
+              }"
             >
               <Icon size={15} weight={tab === key ? 'fill' : 'regular'} />
               {label}
@@ -1121,7 +1132,7 @@ export default function MainWorkspace() {
         </nav>
 
         {/* Search */}
-        <div ref={searchRef} className="relative ml-4 w-52 lg:w-64">
+        <div ref={searchRef} className="relative ml-4 w-40 shrink-0 sm:w-52 lg:w-64">
           <MagnifyingGlass
             size={15}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
@@ -2073,6 +2084,11 @@ export default function MainWorkspace() {
                             <p className="text-[12px] text-zinc-600">
                               {entry.type === 'event' ? 'Sự kiện' : entry.type === 'note' ? 'Ghi chú' : entry.type === 'code' ? 'Mã nguồn' : 'Tệp'}
                               {entry.hadFile && ' · có tệp đính kèm'}
+                              {entry.auto && (
+                                <span className="ml-1 rounded bg-amber-500/15 px-1 py-0.5 text-[10px] font-medium text-amber-400">
+                                  tự động sau 7 ngày
+                                </span>
+                              )}
                             </p>
                           </div>
                           <p className="shrink-0 text-[12px] text-zinc-600">
