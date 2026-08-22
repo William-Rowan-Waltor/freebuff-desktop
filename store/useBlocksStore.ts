@@ -28,6 +28,7 @@ import {
 } from '@/lib/db/workspaces'
 import { supabase } from '@/lib/supabase/client'
 import { logAudit } from '@/lib/audit'
+import { saveRevision, loadRevisions, type RevisionSnapshot } from '@/lib/db/revisions'
 
 /** History cap for Ctrl/Cmd+Z across block edits (also the persisted cap). */
 const HISTORY_LIMIT = 30
@@ -155,6 +156,8 @@ export interface PurgeHistoryEntry {
   hadFile: boolean
   /** Full block snapshot so undo can re-create the tombstone. */
   block: Block
+  /** True when the 7-day auto-clean removed this block (not a manual purge). */
+  auto?: boolean
 }
 
 function loadPurgeHistory(): PurgeHistoryEntry[] {
@@ -313,9 +316,38 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
       // snapshot's blocks are exactly the ones still hidden).
       const persisted = loadSnapshot()
       if (persisted) set({ lastDelete: persisted })
-      // Best-effort purge of tombstones past the undo window.
+      // Hydrate undo stack from DB revisions when localStorage is empty
+      // (e.g. new device / cleared storage). This is non-blocking.
+      if (get().undoStack.length === 0) {
+        void loadRevisions(HISTORY_LIMIT).then((rows) => {
+          if (rows.length === 0) return
+          const undoStack: SnapshotEntry[] = rows.map((r) => r.snapshot).reverse()
+          saveHistory(undoStack, [])
+          set({ undoStack, redoStack: [] })
+        })
+      }
+      // Best-effort purge of tombstones past the undo window. Every block the
+      // auto-clean removes is recorded in the purge history (marked `auto`)
+      // so the 7-day cleanup never makes data vanish without a trace — the
+      // history tab (and its CSV export) stays the single place to look.
       if (await isSoftDeleteSupported()) {
-        void purgeDeletedBlocks(7).catch(() => undefined)
+        void purgeDeletedBlocks(7)
+          .then((purged) => {
+            if (purged.length === 0) return
+            const entries: PurgeHistoryEntry[] = purged.map((b) => ({
+              id: b.id,
+              title: b.title,
+              type: b.type,
+              purgedAt: new Date().toISOString(),
+              hadFile: !!b.file_url,
+              block: b,
+              auto: true,
+            }))
+            const history = [...get().purgeHistory, ...entries].slice(-PURGE_HISTORY_LIMIT)
+            savePurgeHistory(history)
+            set({ purgeHistory: history })
+          })
+          .catch(() => undefined)
       }
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Không thể tải dữ liệu', loading: false })
@@ -401,7 +433,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
         await deleteFileDb(masterPath)
         storagePaths.push(masterPath)
       } catch (err) {
-        console.error(`[freebuff] storage delete failed (orphan risk): ${masterPath}`, err)
+        console.error(`[dresplace] storage delete failed (orphan risk): ${masterPath}`, err)
       }
     }
     const snapshot: DeleteSnapshot = {
@@ -657,10 +689,11 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
       // Inside a batch, individual pushHistory calls are suppressed — only
       // endBatch() pushes a single snapshot for the whole logical edit.
       if (state.batchDepth > 0) return state
-      const undoStack = [...state.undoStack, { blocks: state.blocks, relations: state.relations }].slice(
-        -HISTORY_LIMIT,
-      )
+      const snapshot: SnapshotEntry = { blocks: state.blocks, relations: state.relations }
+      const undoStack = [...state.undoStack, snapshot].slice(-HISTORY_LIMIT)
       saveHistory(undoStack, [])
+      // Persist to DB asynchronously (fire-and-forget, non-blocking).
+      void saveRevision(snapshot, 'auto')
       return { undoStack, redoStack: [] }
     })
   },

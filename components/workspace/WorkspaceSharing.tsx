@@ -13,7 +13,7 @@ import {
   Trash,
 } from '@phosphor-icons/react'
 import { useBlocksStore } from '@/store/useBlocksStore'
-import type { WorkspaceMember, WorkspaceRole } from '@/lib/workspace'
+import { createInvite, getWorkspaceMembers, updateMemberRole, removeMember as removeMemberDb, type WorkspaceMember, type WorkspaceRole } from '@/lib/workspace'
 
 const ROLE_LABELS: Record<WorkspaceRole, { label: string; icon: React.ElementType }> = {
   owner: { label: 'Chủ sở hữu', icon: Crown },
@@ -39,18 +39,28 @@ export default function WorkspaceSharing() {
 
   useEffect(() => {
     if (!activeWorkspaceId) return
-    // Load members (placeholder — real implementation uses Supabase)
-    setMembers([])
+    setLoading(true)
+    getWorkspaceMembers(activeWorkspaceId)
+      .then(setMembers)
+      .catch(() => setMembers([]))
+      .finally(() => setLoading(false))
   }, [activeWorkspaceId])
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !activeWorkspaceId) return
     setLoading(true)
-    // Placeholder: generate invite code locally
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase()
-    setInviteCode(code)
+    const result = await createInvite(activeWorkspaceId, inviteEmail.trim(), inviteRole)
+    if (result.error) {
+      alert(result.error)
+      setLoading(false)
+      return
+    }
+    setInviteCode(result.code)
     setLoading(false)
     setInviteEmail('')
+    // Refresh member list
+    const updated = await getWorkspaceMembers(activeWorkspaceId).catch(() => members)
+    setMembers(updated)
   }
 
   const copyInviteCode = () => {
@@ -60,14 +70,18 @@ export default function WorkspaceSharing() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const updateRole = (userId: string, newRole: WorkspaceRole) => {
+  const updateRole = async (userId: string, newRole: WorkspaceRole) => {
+    if (!activeWorkspaceId) return
+    await updateMemberRole(activeWorkspaceId, userId, newRole)
     setMembers((prev) =>
       prev.map((m) => (m.user_id === userId ? { ...m, role: newRole } : m)),
     )
   }
 
-  const removeMember = (userId: string) => {
+  const handleRemoveMember = async (userId: string) => {
+    if (!activeWorkspaceId) return
     if (!window.confirm('Xóa thành viên này khỏi workspace?')) return
+    await removeMemberDb(activeWorkspaceId, userId)
     setMembers((prev) => prev.filter((m) => m.user_id !== userId))
   }
 
@@ -174,7 +188,7 @@ export default function WorkspaceSharing() {
                         </select>
                         <button
                           type="button"
-                          onClick={() => removeMember(member.user_id)}
+                          onClick={() => handleRemoveMember(member.user_id)}
                           className="flex h-5 w-5 items-center justify-center rounded text-zinc-500 hover:text-red-400"
                         >
                           <Trash size={12} />
