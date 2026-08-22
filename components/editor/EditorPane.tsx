@@ -10,7 +10,7 @@ import FontFamily from '@tiptap/extension-font-family'
 import Color from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import { Placeholder } from '@tiptap/extensions'
-import { LinkSimple, X, Plus, MagnifyingGlass, ArrowUUpLeft, DownloadSimple, UploadSimple } from '@phosphor-icons/react'
+import { LinkSimple, X, Plus, MagnifyingGlass, ArrowUUpLeft, DownloadSimple, UploadSimple, Sparkle } from '@phosphor-icons/react'
 import { useBlocksStore } from '@/store/useBlocksStore'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import EditorToolbar from '@/components/editor/EditorToolbar'
@@ -22,6 +22,7 @@ import { MARKDOWN_ITEMS } from '@/lib/markdown-shortcuts'
 import { parseRecurrence, occurrenceDates } from '@/lib/recurrence'
 import { createOverride, splitSeries } from '@/lib/override'
 import { buildIcs, collectSeries, downloadIcs, icsFilename } from '@/lib/ics'
+import { suggestTags, suggestPriority, summarizeContent, suggestNextSteps } from '@/lib/ai-features'
 import { importIcs } from '@/lib/ics-import'
 import { TextSelection } from '@tiptap/pm/state'
 import type { Block } from '@/types'
@@ -599,6 +600,31 @@ export default function EditorPane({ block, onChange }: EditorPaneProps) {
             className="flex-1 rounded-lg border border-border-subtle bg-background px-2 py-1 font-mono text-[11px] text-zinc-300 outline-none placeholder:text-zinc-600 focus:border-accent"
           />
         </label>
+        {/* AI: Auto-tag suggestions */}
+        {(() => {
+          const existing = (block.tags ?? '').split(',').map((s) => s.trim().toLowerCase())
+          const aiSuggestions = suggestTags(block).filter((t) => !existing.includes(t.toLowerCase()))
+          if (aiSuggestions.length === 0) return null
+          return (
+            <div className="mt-1 flex flex-wrap gap-1">
+              <span className="text-[9px] text-zinc-600">Gợi ý:</span>
+              {aiSuggestions.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    const current = (block.tags ?? '').trim()
+                    const newTags = current ? `${current}, ${tag}` : tag
+                    onChange(block, { tags: newTags })
+                  }}
+                  className="rounded border border-dashed border-accent/30 bg-accent/5 px-1.5 py-0.5 text-[10px] text-accent/70 hover:bg-accent/15 hover:text-accent transition-colors"
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+          )
+        })()}
         {(block.tags ?? '').split(',').filter(Boolean).length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {block.tags!.split(',').filter(Boolean).map((tag) => (
@@ -621,6 +647,22 @@ export default function EditorPane({ block, onChange }: EditorPaneProps) {
             ))}
           </div>
         )}
+        {/* AI: Smart next-step suggestions */}
+        {(() => {
+          const tips = suggestNextSteps(block)
+          if (tips.length === 0) return null
+          return (
+            <div className="mt-2 rounded-lg border border-accent/20 bg-accent/5 p-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Sparkle size={10} className="text-accent" />
+                <span className="font-mono text-[9px] uppercase tracking-wider text-accent/70">AI Gợi ý</span>
+              </div>
+              {tips.map((tip, i) => (
+                <p key={i} className="text-[10px] text-zinc-400 leading-relaxed">• {tip}</p>
+              ))}
+            </div>
+          )
+        })()}
 
         {block.type === 'event' && (
           <div className="mb-4 rounded-xl border border-border-subtle bg-surface p-3">
