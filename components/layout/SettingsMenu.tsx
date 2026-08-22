@@ -1,14 +1,45 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { GearSix, Clock, BellRinging, Play, Alarm, MarkdownLogo, CaretDown } from '@phosphor-icons/react'
+import {
+  GearSix,
+  Clock,
+  BellRinging,
+  Play,
+  Alarm,
+  MarkdownLogo,
+  CaretDown,
+  SignOut,
+  ListBullets,
+} from '@phosphor-icons/react'
 import { useSettingsStore, DEFAULT_EVENT_DURATIONS, DEFAULT_EVENT_DURATION } from '@/store/useSettingsStore'
 import { CHIMES, playChime, CUSTOM_CHIME_MIN, CUSTOM_CHIME_MAX } from '@/lib/chime'
 import { mdToHtml, sanitizeHtml } from '@/lib/markdown'
 import { MARKDOWN_ITEMS } from '@/lib/markdown-shortcuts'
+import { getAuditLog, type AuditEntry } from '@/lib/audit'
+import { getRecentActivity, type HistoryEntry } from '@/lib/db/block-history'
+import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-// Threshold presets (minutes) for event reminders; 10 is the app default.
-const REMINDER_PRESETS = [5, 10, 15, 30] as const
+// Threshold presets for event reminders, in minutes. Day/week presets make the
+// pipeline useful for all-day deadlines ("nộp thuế ngày 20"); 10 is the default.
+const REMINDER_PRESETS: { minutes: number; label: string }[] = [
+  { minutes: 5, label: '5 phút' },
+  { minutes: 10, label: '10 phút' },
+  { minutes: 15, label: '15 phút' },
+  { minutes: 30, label: '30 phút' },
+  { minutes: 60, label: '1 giờ' },
+  { minutes: 1440, label: '1 ngày' },
+  { minutes: 10080, label: '1 tuần' },
+]
+
+const AUDIT_ACTION_LABELS: Record<AuditEntry['action'], string> = {
+  create: 'Tạo',
+  update: 'Sửa',
+  delete: 'Xóa',
+  restore: 'Khôi phục',
+  purge: 'Xóa vĩnh viễn',
+}
 
 function Switch({
   checked,
@@ -35,9 +66,93 @@ function Switch({
   )
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  create: 'Tạo mới',
+  update: 'Cập nhật',
+  delete: 'Xóa',
+  restore: 'Khôi phục',
+  purge: 'Xóa vĩnh viễn',
+}
+
+function ServerHistorySection() {
+  const [open, setOpen] = useState(false)
+  const [entries, setEntries] = useState<HistoryEntry[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const toggle = async () => {
+    if (!open) {
+      setLoading(true)
+      const data = await getRecentActivity(50)
+      setEntries(data)
+      setLoading(false)
+    }
+    setOpen((o) => !o)
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void toggle()}
+        aria-expanded={open}
+        className="flex w-full items-center gap-1.5 text-[13px] font-medium text-zinc-200"
+      >
+        <ListBullets size={14} className="shrink-0 text-accent" />
+        Lịch sử trên máy chủ
+        <CaretDown
+          size={12}
+          weight="bold"
+          className={`ml-auto shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
+        />
+      </button>
+      {open && (
+        <>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+            Lịch sử thay đổi được lưu trên Supabase ({entries.length} mục gần nhất). Đòi hỏi migration
+            block_history.
+          </p>
+          {loading ? (
+            <p className="mt-2 text-[11px] text-zinc-500">Đang tải...</p>
+          ) : (
+            <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1">
+              {entries.length === 0 ? (
+                <p className="rounded-lg border border-border-subtle bg-background px-2 py-2 text-[11px] text-zinc-500">
+                  Chưa có lịch sử. Chạy migration block_history để bắt đầu ghi.
+                </p>
+              ) : (
+                entries.map((e) => (
+                  <div
+                    key={e.id}
+                    className="rounded-lg border border-border-subtle bg-background px-2 py-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-medium text-zinc-300">
+                        {ACTION_LABELS[e.action] ?? e.action}
+                      </span>
+                      <span className="font-mono text-[10px] text-zinc-500">
+                        {new Date(e.created_at).toLocaleString('vi-VN')}
+                      </span>
+                    </div>
+                    {e.new_data?.title && (
+                      <p className="truncate text-[11px] text-zinc-400">{e.new_data.title}</p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </>
+  )
+}
+
 export default function SettingsMenu() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [markdownOpen, setMarkdownOpen] = useState(true)
+  const [auditOpen, setAuditOpen] = useState(false)
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
   const ref = useRef<HTMLDivElement>(null)
   const duration = useSettingsStore((state) => state.defaultEventDuration)
   const setDuration = useSettingsStore((state) => state.setDefaultEventDuration)
@@ -69,6 +184,15 @@ export default function SettingsMenu() {
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
+
+  const handleSignOut = async () => {
+    setOpen(false)
+    try {
+      await supabase.auth.signOut()
+    } finally {
+      router.replace('/login')
+    }
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -220,8 +344,11 @@ export default function SettingsMenu() {
           {remindersEnabled && (
             <div className="mt-2.5">
               <p className="text-[11px] text-zinc-400">Nhắc trước</p>
-              <div className="mt-1.5 flex gap-1.5" role="radiogroup" aria-label="Thời gian nhắc trước sự kiện">
-                {REMINDER_PRESETS.map((minutes) => {
+              <p className="mt-0.5 text-[11px] text-zinc-500">
+                Sự kiện cả ngày được nhắc lúc 09:00 sáng ngày diễn ra.
+              </p>
+              <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Thời gian nhắc trước sự kiện">
+                {REMINDER_PRESETS.map(({ minutes, label }) => {
                   const active = minutes === reminderMinutes
                   return (
                     <button
@@ -230,14 +357,14 @@ export default function SettingsMenu() {
                       role="radio"
                       aria-checked={active}
                       onClick={() => setReminderMinutes(minutes)}
-                      title={minutes === 10 ? `${minutes} phút (mặc định)` : `${minutes} phút`}
-                      className={`flex-1 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
+                      title={minutes === 10 ? `${label} (mặc định)` : label}
+                      className={`rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
                         active
                           ? 'bg-accent text-accent-foreground'
                           : 'border border-border-subtle text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
                       }`}
                     >
-                      {minutes} phút
+                      {label}
                     </button>
                   )
                 })}
@@ -302,6 +429,77 @@ export default function SettingsMenu() {
               </div>
             </>
           )}
+          {/* Activity log (client-side): the audit module records every block
+              mutation on THIS device — better than nothing for "ai làm gì lúc
+              nào", but it is not a server-side trail yet (Phase 2/3). */}
+          <div className="my-3 border-t border-border-subtle" />
+          <button
+            type="button"
+            onClick={() => {
+              if (!auditOpen) setAuditEntries([...getAuditLog()].reverse())
+              setAuditOpen((o) => !o)
+            }}
+            aria-expanded={auditOpen}
+            aria-label="Bật/ tắt nhật ký hoạt động"
+            className="flex w-full items-center gap-1.5 text-[13px] font-medium text-zinc-200"
+          >
+            <ListBullets size={14} className="shrink-0 text-accent" />
+            Nhật ký hoạt động
+            <CaretDown
+              size={12}
+              weight="bold"
+              className={`ml-auto shrink-0 text-zinc-500 transition-transform ${auditOpen ? '' : '-rotate-90'}`}
+            />
+          </button>
+          {auditOpen && (
+            <>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+                Lịch sử thay đổi block trên máy này ({auditEntries.length}/500 mục gần nhất). Chưa đồng
+                bộ máy chủ — đây không phải audit trail đầy đủ.
+              </p>
+              <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1">
+                {auditEntries.length === 0 ? (
+                  <p className="rounded-lg border border-border-subtle bg-background px-2 py-2 text-[11px] text-zinc-500">
+                    Chưa có hoạt động nào được ghi.
+                  </p>
+                ) : (
+                  auditEntries.map((entry, i) => (
+                    <div
+                      key={`${entry.timestamp}-${entry.blockId}-${i}`}
+                      className="rounded-lg border border-border-subtle bg-background px-2 py-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-medium text-zinc-300">
+                          {AUDIT_ACTION_LABELS[entry.action] ?? entry.action}
+                        </span>
+                        <span className="font-mono text-[10px] text-zinc-500">
+                          {new Date(entry.timestamp).toLocaleString('vi-VI')}
+                        </span>
+                      </div>
+                      {entry.blockTitle && (
+                        <p className="truncate text-[11px] text-zinc-400">{entry.blockTitle}</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Server-side history (block_history table) */}
+          <div className="my-1 border-t border-border-subtle pt-1" />
+          <ServerHistorySection />
+
+          {/* Sign out */}
+          <div className="my-3 border-t border-border-subtle" />
+          <button
+            type="button"
+            onClick={() => void handleSignOut()}
+            className="flex w-full items-center gap-1.5 rounded-lg px-1 py-1.5 text-[13px] font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-red-400"
+          >
+            <SignOut size={14} className="shrink-0" />
+            Đăng xuất
+          </button>
         </div>
       )}
     </div>

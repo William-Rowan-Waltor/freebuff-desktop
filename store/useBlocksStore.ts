@@ -29,6 +29,7 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import { logAudit } from '@/lib/audit'
 import { saveRevision, loadRevisions, type RevisionSnapshot } from '@/lib/db/revisions'
+import { recordHistory } from '@/lib/db/block-history'
 
 /** History cap for Ctrl/Cmd+Z across block edits (also the persisted cap). */
 const HISTORY_LIMIT = 30
@@ -361,16 +362,19 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
     get().pushHistory()
     set((state) => ({ blocks: [...state.blocks, block] }))
     logAudit({ blockId: block.id, blockTitle: block.title, action: 'create' })
+    void recordHistory('create', block.id, null, block)
     return block
   },
 
   updateBlock: async (id, patch) => {
+    const oldBlock = get().blocks.find((b) => b.id === id)
     const updated = await updateBlockDb(id, patch)
     get().pushHistory()
     set((state) => ({
       blocks: state.blocks.map((b) => (b.id === id ? updated : b)),
     }))
     logAudit({ blockId: id, blockTitle: updated.title, action: 'update' })
+    void recordHistory('update', id, oldBlock ?? null, updated)
   },
 
   removeBlock: async (id) => {
@@ -568,6 +572,7 @@ export const useBlocksStore = create<BlocksState>((set, get) => ({
     if (!block) return
     await restoreBlock(id)
     const restored = { ...block, deleted_at: null }
+    void recordHistory('restore', id, block, restored)
     // Guard: a live block with the same id (imported/duplicated state) stays
     // as-is — the tombstone row is cleared, but no duplicate lands in the
     // store. Titles are NOT unique (no DB constraint), so same-title blocks
