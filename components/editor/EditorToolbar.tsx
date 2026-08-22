@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import {
   TextB,
@@ -17,6 +18,7 @@ import {
   ClipboardText,
   MarkdownLogo,
   Keyboard,
+  X,
 } from '@phosphor-icons/react'
 import { FONT_OPTIONS, TEXT_COLORS, HIGHLIGHT_COLORS } from '@/lib/markdown'
 
@@ -74,20 +76,29 @@ export default function EditorToolbar({
 }: EditorToolbarProps) {
   if (!editor) return null
 
+  const [linkModal, setLinkModal] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+
   const setLink = () => {
     const previous = editor.getAttributes('link').href as string | undefined
-    const url = window.prompt('Địa chỉ liên kết', previous ?? 'https://')
-    if (url === null) return
-    if (url === '') {
+    setLinkUrl(previous ?? 'https://')
+    setLinkModal(true)
+  }
+
+  const confirmLink = () => {
+    if (linkUrl === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run()
     }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    setLinkModal(false)
+    setLinkUrl('')
   }
 
   const fontFamily = (editor.getAttributes('textStyle').fontFamily as string | undefined) ?? ''
 
   return (
+    <>
     <div className="border-b border-border-subtle px-2 py-1.5">
       {/* Row 1 — mode (always) */}
       <div className="flex flex-wrap items-center gap-0.5">
@@ -295,5 +306,54 @@ export default function EditorToolbar({
         </>
       )}
     </div>
+
+      {/* Link modal */}
+      {linkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Chèn liên kết"
+            className="w-full max-w-sm rounded-2xl border border-border-subtle bg-surface-raised p-5 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-[14px] font-semibold text-zinc-100">Chèn liên kết</h3>
+              <button
+                type="button"
+                onClick={() => setLinkModal(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <input
+              type="url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') confirmLink() }}
+              placeholder="https://example.com"
+              autoFocus
+              className="mt-3 w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-accent"
+            />
+            <div className="mt-3 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLinkModal(false)}
+                className="rounded-lg px-3 py-1.5 text-[12px] text-zinc-400 hover:bg-zinc-800"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={confirmLink}
+                className="rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-accent-foreground hover:bg-accent-strong"
+              >
+                {linkUrl ? 'Áp dụng' : 'Xóa liên kết'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
