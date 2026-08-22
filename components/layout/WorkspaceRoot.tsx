@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useBlocksStore } from '@/store/useBlocksStore'
+import PWARegister from '@/components/PWARegister'
 
 export default function WorkspaceRoot({ children }: { children: React.ReactNode }) {
   const loadBlocks = useBlocksStore((state) => state.loadBlocks)
@@ -10,5 +11,10 @@ export default function WorkspaceRoot({ children }: { children: React.ReactNode 
     loadBlocks()
   }, [loadBlocks])
 
-  return <>{children}</>
+  return (
+    <>
+      <PWARegister />
+      {children}
+    </>
+  )
 }
