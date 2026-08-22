@@ -89,7 +89,10 @@ export default function EditorToolbar({
     if (linkUrl === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
     } else {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run()
+      // Validate URL protocol — only allow http/https (block javascript:/data:/vbscript:)
+      const url = linkUrl.trim()
+      const safeUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`
+      editor.chain().focus().extendMarkRange('link').setLink({ href: safeUrl }).run()
     }
     setLinkModal(false)
     setLinkUrl('')

@@ -53,7 +53,7 @@ import { shiftExceptions } from '@/lib/rebaseExceptions'
 import { buildWorkspaceIcs, downloadIcs } from '@/lib/ics'
 import { exportBlockAsPdf, exportNotesAsPdf } from '@/lib/pdf-export'
 import { importIcs, previewIcs, type IcsPreview, type IcsEventRole } from '@/lib/ics-import'
-import { fileExists } from '@/lib/db/storage'
+import { fileRefExists, resolveFileUrl } from '@/lib/db/storage'
 import {
   loadIcsHistory,
   saveIcsHistoryServer,
@@ -173,7 +173,9 @@ interface SideTask {
 }
 
 function extractTasks(blocks: Block[]): SideTask[] {
-  const today = new Date().toISOString().slice(0, 10)
+  // Use LOCAL date, not UTC (CEO6 bug: UTC loses first 7 hours in UTC+7)
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const results: SideTask[] = []
   for (const b of blocks) {
     if (b.type !== 'note' && b.type !== 'code') continue
@@ -990,12 +992,12 @@ export default function MainWorkspace() {
       flashIcsMsg('Không thấy sự kiện nào trong tệp')
       return
     }
-    // Dangling = no live file block has the URL AND the object is not
-    // actually in this project's storage. The probe returns null for foreign
-    // URLs (the migration case), so the file-block rule decides there.
-    // Probe results are cached for the session (lib/db/storage), so repeated
-    // imports of the same file references never re-HEAD the URLs.
-    const liveUrls = new Set(
+    // Dangling = no live file block carries the reference AND the object is
+    // not actually in this project's storage. Works for both stored PATHS
+    // (new uploads) and legacy full URLs; foreign URLs return null from the
+    // probe, so the file-block rule decides there. Probe results are cached
+    // for the session (lib/db/storage).
+    const liveRefs = new Set(
       blocks
         .filter((b) => b.type === 'file')
         .map((b) => b.file_url)
@@ -1006,7 +1008,7 @@ export default function MainWorkspace() {
       const probed = await Promise.all(
         summary.fileRefs.map(async (r) => ({
           r,
-          exists: liveUrls.has(r.file_url) ? true : await fileExists(r.file_url),
+          exists: liveRefs.has(r.file_url) ? true : await fileRefExists(r.file_url),
         })),
       )
       const danglingUids = new Set(probed.filter((p) => p.exists !== true).map((p) => p.r.uid))
@@ -1548,16 +1550,7 @@ export default function MainWorkspace() {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-[13px] font-medium text-zinc-100">{block.title}</p>
-                          {block.file_url && (
-                            <a
-                              href={block.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[12px] text-accent hover:underline"
-                            >
-                              Mở tệp
-                            </a>
-                          )}
+                          {block.file_url && <StoredFileLink value={block.file_url} />}
                         </div>
                       </div>
                     </div>
@@ -2769,6 +2762,7 @@ function formatHistoryDate(iso: string): string {
 }
 
 function FileDetail({ block }: { block: Block }) {
+  const url = useResolvedFileUrl(block.file_url)
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800 font-mono text-sm uppercase text-accent">
@@ -2778,9 +2772,9 @@ function FileDetail({ block }: { block: Block }) {
       {block.file_extension && (
         <p className="font-mono text-[12px] text-zinc-500">.{block.file_extension}</p>
       )}
-      {block.file_url && (
+      {url && (
         <a
-          href={block.file_url}
+          href={url}
           target="_blank"
           rel="noreferrer"
           className="mt-1 rounded-lg bg-accent px-4 py-2 text-[13px] font-medium text-accent-foreground transition-colors hover:bg-accent-strong"
@@ -2810,14 +2804,7 @@ function PreviewPane({ block }: { block: Block }) {
       <div className="flex-1 overflow-y-auto p-5">
         <h2 className="text-xl font-semibold tracking-tight text-zinc-100">{block.title ?? 'Chưa có tiêu đề'}</h2>
         {block.type === 'file' && block.file_url ? (
-          <Image
-            src={block.file_url}
-            alt={block.title ?? 'Tệp đính kèm'}
-            width={640}
-            height={360}
-            unoptimized
-            className="mt-4 h-auto max-w-full rounded-xl"
-          />
+          <StoredImagePreview value={block.file_url} alt={block.title ?? 'Tệp đính kèm'} />
         ) : (
           <p className="mt-3 text-[14px] leading-relaxed text-zinc-400">{textPreview(block.content)}</p>
         )}
@@ -2870,5 +2857,50 @@ function Toast({
     >
       {children}
     </div>
+  )
+}
+
+
+// ---------- stored file references (path-first, signed on demand) ----------
+// blocks.file_url now stores the storage PATH (O4). Legacy rows keep full
+// URLs; resolveFileUrl heals same-bucket URLs by re-signing their path.
+
+function useResolvedFileUrl(value: string | null | undefined): string | null {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!value) {
+      setUrl(null)
+      return
+    }
+    let cancelled = false
+    resolveFileUrl(value)
+      .then((u) => {
+        if (!cancelled) setUrl(u)
+      })
+      .catch(() => {
+        if (!cancelled) setUrl(value)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [value])
+  return url
+}
+
+function StoredFileLink({ value }: { value: string }) {
+  const url = useResolvedFileUrl(value)
+  if (!url) return <span className="text-[12px] text-zinc-600">Đang mở liên kết…</span>
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="text-[12px] text-accent hover:underline">
+      Mở tệp
+    </a>
+  )
+}
+
+function StoredImagePreview({ value, alt }: { value: string; alt: string }) {
+  const url = useResolvedFileUrl(value)
+  if (!url) return <p className="mt-3 text-[13px] text-zinc-500">Đang tải bản xem trước…</p>
+  return (
+    <Image src={url} alt={alt} width={640} height={360} unoptimized className="mt-4 h-auto max-w-full rounded-xl" />
   )
 }

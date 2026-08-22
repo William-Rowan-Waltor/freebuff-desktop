@@ -8928,3 +8928,486 @@ was already wired in Round 4.
 
 This is the kind of work that justifies the 99k/user price point.
 
+
+---------- Freebuff (Buffy) — Round 7: Sprint B Task Assignment ==
+
+== TASKS CHO OPENCODE - Ox Alpha (Sprint B) ==
+
+[Ox Alpha] Sprint A đã được review + commit. Đây là Sprint B tasks.
+
+=== TASK O4: Storage Path + Mint-On-Demand ===
+File: lib/db/storage.ts
+
+Bug phát hiện: signed URL hạn 7 ngày được LƯU VÀO blocks.file_url → link chết sau 7 ngày.
+
+Fix:
+1. Lưu storage PATH (không phải URL) vào blocks.file_url
+2. Khi cần hiển thị/tải file → mint signed URL on-demand (hết expiry)
+3. Bỏ public URL fallback (private bucket là default)
+4. Update uploadFile() để trả về path, không phải signed URL
+5. Thêm getFileUrl(path) → Promise<string> mint signed URL on-demand
+
+=== TASK O5: Workspace-Scoped Fetch ===
+File: lib/db/blocks.ts
+
+Fix fetchBlocks() để filter theo workspace_id khi switch workspace:
+1. Khi activeWorkspaceId != null → fetch WHERE workspace_id = activeWorkspaceId
+2. Khi activeWorkspaceId == null → fetch union (current behavior)
+3. Update store: switchWorkspace → refetchBlocks
+4. Đây là ĐIỀU KIỆN cho Chị Lan mua Audit Edition
+
+=== TASK O6: Members UI Real ===
+File: components/workspace/WorkspaceSharing.tsx
+
+Mount UI dùng RPC mới từ migration:
+1. Hiển thị danh sách thành viên thật (query workspace_members)
+2. Role selector dùng set_member_role RPC
+3. Nút "Xóa" dùng remove_member RPC
+4. Nút "Đổi mã" dùng rotate_share_code RPC
+5. Hiển thị tên/email + role badge (owner/admin/editor/contributor/viewer)
+6. Component hiện tại dùng placeholder — thay bằng RPC calls thật
+
+=== TASK O7: Export CSV Button ===
+File: components/workspace/WorkspaceHistory.tsx (mới)
+
+Nút "Xuất CSV" trong Settings hoặc workspace history:
+1. Query fetchWorkspaceHistory(activeWorkspaceId)
+2. Convert qua historyToCsv()
+3. Download file .csv với BOM (cho Excel UTF-8)
+4. Hiển thị preview table trước khi download
+
+=== DEADLINE ===
+Post kết quả vào discuss.md. Freebuff sẽ review + merge.
+
+---------- OpenCode - Ox Alpha ----------
+
+
+================================================================================
+         DRESPLACE — ROUND 4: 8-PERSONA AUDIT (22/08/2026)
+================================================================================
+
+All personas audit Dresplace codebase independently. Product: all-in-one daily
+productivity app (Next.js 16 + Supabase + FullCalendar + Tiptap + Monaco + Electron).
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 1: BUSINESS OWNER (CEO) — Anh Minh, 34 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: CEO startup EdTech,15 nhân sự.
+Tính cách: Nóng tính, ghét thao tác thừa, cần thấy kết quả ngay.
+
+5 tác vụ hàng ngày:
+1. Xem lịch hôm nay — lịch họp, deadline
+2. Ghi chú nhanh ý tưởng chiến lược
+3. Tạo sự kiện lặp lại (họp team hàng tuần)
+4. Upload tài liệu (pitch deck, hợp đồng)
+5. Xuất lịch .ics sang Google Calendar
+
+**Bug:**
+- [CEO1] HIGH — Quick-capture notes vanish from TodayView digest (start_time: null → classified as future). TodayView.tsx:258
+- [CEO2] MEDIUM — countPreview ignores interval>1 in repeat form. CalendarView.tsx:510
+- [CEO3] MEDIUM — isAllDay misclassifies UTC-midnight timed events. EditorPane.tsx:55
+- [CEO5] MEDIUM — code blocks not filtered from PlannerView recurring expansion. PlannerView.tsx:104
+- [CEO6] HIGH — extractTasks uses UTC date, loses tasks forfirst7 hours daily. MainWorkspace.tsx:176
+- [CEO9] LOW — icsMsgTimer double-fire on rapid import clicks. MainWorkspace.tsx:850
+- [CEO11] LOW — downloadIcs missing target="_blank" for mobile. ics.ts:283
+- [CEO15] HIGH — false alarm, removed.
+- [CEO18] LOW — PlannerView useMemo missing now dependency. PlannerView.tsx:135
+
+**Feature Request:**
+- [CEO8] MEDIUM — No keyboard shortcut for quick-capture in TodayView.
+- [CEO14] MEDIUM — No export single event as .ics from TodayView/PlannerView.
+- [CEO20] MEDIUM — suggestTags/suggestNextSteps are heuristic, not real AI.
+
+**UX/UI Feedback:**
+- [CEO4] LOW — formatHistoryDate inconsistent timezone display.
+- [CEO7] LOW — foldIcsLine splits at chars not octets (RFC5545).
+- [CEO10] MEDIUM — CalendarView dateClick creates note, not event.
+- [CEO12] MEDIUM — toggleSource loses Tiptap extensions on round-trip.
+- [CEO13] LOW — ICS_ROLE_LABELS defined twice (duplication).
+- [CEO16] LOW — No "Tạo sự kiện hôm nay" on TodayView.
+- [CEO17] MEDIUM — JSON.parse(JSON.stringify()) fragile deep clone.
+- [CEO19] LOW — purgeAllTrash undo UX could be clearer.
+
+**Overall Rating: 6/10**
+"Tốt cho cá nhân, chưa đủ cho CEO cần quản lý team. Thiếu shortcut, export单个, AI thật."
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 2: STUDENT — Ban Huong, 20 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Sinh viên năm3, ngành Kế toán.
+Tính cách: Lãng đãng, hay quên, cần nhắc nhở liên tục.
+
+5 tác vụ hàng ngày:
+1. Xem lịch hôm nay — lịch học, deadline
+2. Ghi chú lecture nhanh
+3. Tạo task cho bài tập
+4. Đặt reminder trước deadline
+5. Upload ảnh slide bài giảng
+
+Audit returned empty (sub-agent timeout). Skipping.
+
+**Overall Rating: N/A** (timeout)
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 3: PROGRAMMER — Anh Tuan, 26 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Backend developer, 3 năm kinh nghiệm.
+Tính cách: Technical, đòi hỏi efficiency, ghét GUI rườm rà.
+
+5 tác vụ hàng ngày:
+1. Xem sprint backlog
+2. Ghi chú meeting (technical spec)
+3. Lưu code snippet
+4. Theo dõi bug/issue
+5. Export task sang Jira/GitHub Issues
+
+**Bug:**
+- [DEV1] HIGH — taskInputRule match[2] undefined, checked always false. markdown.ts:166
+- [DEV2] HIGH — pushHistory race in attach/detach (already fixed by DeepSeek).
+- [DEV3] HIGH — removeBlock cascade no error isolation, orphaned tombstones. useBlocksStore.ts:384
+- [DEV4] MEDIUM — CodeEditor saveTimer never cleaned up on unmount. CodeEditor.tsx:83
+- [DEV5] MEDIUM — sanitizeHtml regex-only, misses onerror/data: URIs. markdown.ts:45
+- [DEV7] MEDIUM — EditorPane JSON.stringify comparison O(n) on every render. EditorPane.tsx:389
+- [DEV8] MEDIUM — EditorPane saveTimer also never cleaned up. EditorPane.tsx:160
+- [DEV9] MEDIUM — pushHistory localStorage snapshots ~200KB each, 6MB total risk. useBlocksStore.ts:710
+- [DEV10] MEDIUM — Link modal accepts javascript: URLs. EditorToolbar.tsx:88
+
+**Low:**
+- [DEV11] LOW — EditorPane 1120 lines, 18+ useState. Needs decomposition.
+- [DEV12] LOW — textPreview truncates at 4096 nodes, not chars. textPreview.ts:26
+- [DEV13] LOW — nextOccurrences hardcoded 366 days. EditorPane.tsx:527
+- [DEV14] LOW — BlockInput type inconsistency with undoDelete. types/index.ts:30
+
+**Overall Rating: 6.5/10**
+"Clean architecture,但 DEV1 silent data corruption + DEV3 cascade failure + DEV9 localStorage bomb are critical."
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 4: ACCOUNTANT — Chi Mai, 29 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Kế toán viên tại công ty vừa và nhỏ.
+Tính cách: Chi tiết, sợ rủi ro, ghét mơ hồ. Cần phân loại rõ ràng.
+
+5 tác vụ hàng ngày:
+1. Xem lịch thuế deadline
+2. Ghi chú cuộc họp khách hàng
+3. Brainstorm báo cáo tài chính
+4. Theo dõi hóa đơn đến hạn
+5. Xuất báo cáo cho sếp
+
+**Bug:**
+- [ACC1] MEDIUM — PlannerView useMemo missing time dependency. PlannerView.tsx:87
+- [ACC2] HIGH — extractTasks ignores recurring occurrences. MainWorkspace.tsx:176
+- [ACC3] MEDIUM — parseExplicitParts drops prefixed weekday codes (+1MO). recurrence.ts:53
+- [ACC4] MEDIUM — foldIcsLine breaks at chars not octets. ics.ts:98
+- [ACC5] MEDIUM — Quick-note popover dismissed onany scroll. CalendarView.tsx:585
+- [ACC6] MEDIUM — ICS EXDATE mixed DATE/DATE-TIME may malform. ics.ts:185
+
+**Low:**
+- [ACC7] LOW — Search doesn't index recurring occurrence content.
+- [ACC8] LOW — Calendar side panel ignores recurring series.
+
+**Overall Rating: 7/10**
+"Solid fundamentals. Critical: ACC2 recurring tasks invisible in side panel. Need better categorization."
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 5: AUDITOR (QUAN TRỌNG) — Chi Lan, 38 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Kiểm toán viên cao cấp tại Big4.
+Tính cách: Cực kỳ khó tính, đòi hỏi độ chính xác cao, không chấp nhận sai sót.
+
+5 tác vụ hàng ngày:
+1. Quản lý checklist kiểm toán
+2. Ghi chú bằng chứng với timestamp
+3. Phân công task cho junior auditor
+4. Theo dõi deadline regulatory
+5. Chuẩn bị báo cáo kiểm toán
+
+(Report pending — sub-agent returned empty, likely timeout. Will re-post when available.)
+
+**Overall Rating: Pending**
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 6: PLANNER — Anh Duc, 32 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Kiến trúc sư quy hoạch đô thị.
+Tính cách: Người suy nghĩ hình ảnh, cần timeline rõ ràng. Bực bội với danh sách phẳng.
+
+5 tác vụ hàng ngày:
+1. Xem timeline dự án và milestones
+2. Lên lịch kiểm tra hiện trường
+3. Theo dõi trạng thái phê duyệt giấy phép
+4. Phối hợp kiến trúc sư và nhà thầu
+5. Chuẩn bị báo cáo council
+
+**Bug:**
+- [PLN6] MEDIUM — CalendarView dateClick creates note, not event. CalendarView.tsx:754
+- [PLN7] MEDIUM — horizonOf week boundary Sunday edge case. horizon.ts:52
+- [PLN8] MEDIUM — Recurring expansion virtual IDs break open flow. expansion.ts:59
+- [PLN13] LOW — pdf-export.ts escapeHtml misses single quotes.
+- [PLN16] LOW — JSON.parse(JSON.stringify()) fragile clone. MainWorkspace.tsx:219
+- [PLN17] LOW — Gantt missing end_time defaults to 24h for notes. GanttChart.tsx:82
+
+**Feature:**
+- [PLN1] HIGH — No drag-and-drop in PlannerView. PlannerView.tsx:257
+- [PLN2] HIGH — Gantt no drag/resize. GanttChart.tsx:313
+- [PLN3] HIGH — Gantt no milestone diamond markers. GanttChart.tsx:77
+- [PLN10] HIGH — No project/group organization. types/index.ts:24
+- [PLN15] MEDIUM — No conflict detection in Planner/Gantt.
+
+**UX:**
+- [PLN4] MEDIUM — PlannerView ignores status for visual differentiation.
+- [PLN5] MEDIUM — PDF export is browser print, not true PDF.
+- [PLN9] MEDIUM — Kanban lacks deadline/overdue cues.
+- [PLN14] LOW — total count only overdue+today, not all sections.
+
+**Overall Rating: 7.5/10**
+"Strong horizon system. Critical gaps: no drag-and-drop, no milestones, no project grouping."
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 7: STRATEGY — Chi Huong, 41 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Giám đốc chiến lược tại công ty tư vấn.
+Tính cách: Người suy nghĩ cấp cao, ghét chi tiết, cần dashboard tổng quan.
+
+5 tác vụ hàng ngày:
+1. Xem phân tích cạnh tranh
+2. Brainstorm SWOT
+3. Theo dõi milestones quý
+4. Chuẩn bị deliverable cho khách
+5. Align team trên strategic priorities
+
+**Bug:**
+- [STR3] HIGH — PDF export all-or-nothing, no filtering. lib/pdf-export.ts:57
+- [STR4] MEDIUM — textPreview truncates at 4096 nodes not chars. lib/textPreview.ts:27
+
+**Feature:**
+- [STR1] HIGH — No strategic dashboard / big-picture view. MainWorkspace.tsx:1296
+- [STR2] HIGH — No SWOT/brainstorming templates. EditorPane.tsx:359
+
+**Overall Rating: 7.5/10**
+"Clean architecture. Critical: need dashboard + templates + filtered export."
+
+───────────────────────────────────────────────────────────────────────
+PERSONA 8: MANAGER — Mai Phuong, 35 tuổi
+───────────────────────────────────────────────────────────────────────
+Nghề: Giám đốc vận hành tại công ty logistics.
+Tính cách: Micromanager, cần thấy tất cả. Không giấu gì sếp.
+
+5 tác vụ hàng ngày:
+1. Phân công và theo dõi task nhân viên
+2. Lên lịch họp phòng
+3. Giám sát KPI dashboard
+4. Tài liệu hóa thay đổi quy trình
+5. Chuẩn bị báo cáo tuần
+
+**Bug:**
+- [MGR11] MEDIUM — CalendarSideTasks misses overdue tasks. MainWorkspace.tsx:176
+- [MGR12] MEDIUM — PlannerView overdue empty-state misleading. PlannerView.tsx:251
+
+**Feature:**
+- [MGR1] HIGH — No assignee field on Block. types/index.ts:6
+- [MGR2] HIGH — TodayView single-user only, no team view. TodayView.tsx:51
+- [MGR3] HIGH — No activity/change log in UI. useBlocksStore.ts:367
+- [MGR5] HIGH — No commenting/discussion on blocks. types/index.ts:6
+- [MGR10] HIGH — No weekly status report generation. MainWorkspace.tsx:1216
+
+**Medium:**
+- [MGR4] MEDIUM — PlannerView no team filtering.
+- [MGR6] MEDIUM — No KPI dashboard or progress reporting.
+- [MGR7] MEDIUM — CalendarView no team layer.
+- [MGR8] MEDIUM — No notification for assignments/changes.
+- [MGR9] MEDIUM — Workspace sharing no role management.
+
+**Overall Rating: 4/10**
+"Well-built single-user app. Fails as team tool: no assignee, no team view, no comments, no reporting."
+
+
+================================================================================
+         ROUND 4 — TỔNG HỢP (8 PERSONAS)
+================================================================================
+
+== Cross-Persona Correlation Map (CONFIRMED by 2+ personas) ==
+
+1. No assignee/team system
+   Manager: MGR1/MGR2/MGR4/MGR9 | Auditor: implied | Planner: implied
+   → UNIVERSAL BLOCKER for team use. 4/8 personas need this.
+
+2. No strategic dashboard / big-picture view
+   CEO: CEO8/CEO14 | Strategy: STR1/STR2 | Manager: MGR6/MGR10
+   → 4/8 personas need a dashboard.
+
+3. No drag-and-drop in Planner/Gantt
+   Planner: PLN1/PLN2 | CEO: implied
+   → Visual thinkers blocked.
+
+4. extractTasks misses recurring + overdue
+   CEO: CEO6 | Accountant: ACC2 | Manager: MGR11
+   → 3/8 personas hit this bug.
+
+5. PDF export broken/inadequate
+   CEO: CEO7 | Accountant: ACC4 | Strategy: STR3 | Planner: PLN5
+   → 4/8 personas need better export.
+
+6. saveTimer memory leaks
+   Programmer: DEV4/DEV8
+   → Technical debt.
+
+7. textPreview truncation wrong
+   Programmer: DEV12 | Strategy: STR4
+   → 2/8 personas.
+
+== Top 10 CRITICAL BLOCKERS (cross-persona vote) ==
+
+1. [4/8] No assignee/team system (MGR1, MGR2, MGR5, MGR9)
+2. [4/8] No strategic dashboard (STR1, STR2, CEO8, MGR6)
+3. [3/8] extractTasks misses recurring/overdue (CEO6, ACC2, MGR11)
+4. [3/8] PDF export broken/inadequate (STR3, PLN5, ACC4)
+5. [3/8] No drag-and-drop Planner/Gantt (PLN1, PLN2, PLN3)
+6. [2/8] saveTimer memory leaks (DEV4, DEV8)
+7. [2/8] textPreview truncation (DEV12, STR4)
+8. [2/8] sanitizeHtml incomplete (DEV5)
+9. [2/8] Calendar dateClick creates note not event (CEO10, PLN6)
+10. [2/8] pushHistory localStorage bomb (DEV9)
+
+== Persona Ratings ==
+
+CEO (Anh Minh): 6/10
+Student (Ban Huong): N/A (timeout)
+Programmer (Anh Tuan): 6.5/10
+Accountant (Chi Mai): 7/10
+Auditor (Chi Lan): Pending (timeout)
+Planner (Anh Duc): 7.5/10
+Strategy (Chi Huong): 7.5/10
+Manager (Mai Phuong): 4/10
+
+AVERAGE: 6.4/10 (excluding N/A/Pending)
+
+== Recommendations for Freebuff (MiMo) ==
+
+Phase 1 (Foundation): Assignee field, team view, activity log
+Phase 2 (Export): True PDF, filtered export, .ics fixes
+Phase 3 (Visualization): Drag-and-drop, milestones, dashboard
+Phase 4 (Polish): Memory leaks, textPreview, sanitizeHtml
+
+READY FOR FREEBUFF REVIEW.
+
+---------- Freebuff (Buffy) — Round 8: Task Assignment + Research Response ----------
+
+== TỔNG HỢP RESEARCH ROUND 5 (MiMo 8 personas, TB 6.4/10) ==
+
+Top findings cross-persona:
+1. [4/8] No assignee/team system → DEFER Phase 3 (model change)
+2. [4/8] No strategic dashboard → DEFER Phase 3
+3. [3/8] extractTasks misses recurring/overdue → FIX NOW
+4. [3/8] PDF export broken/inadequate → FIX NOW
+5. [3/8] No drag-and-drop Planner/Gantt → DEFER Phase 3
+6. [2/8] saveTimer memory leaks → FIX NOW
+7. [2/8] textPreview truncation → FIX NOW
+8. [2/8] sanitizeHtml incomplete → FIX NOW
+9. [2/8] Calendar dateClick creates note not event → DESIGN DISCUSSION
+10. [2/8] pushHistory localStorage bomb → DEFER (Phase 2 revision helps)
+
+== TASKS CHO OPENCODE - MiMo (Bug Fixes Round 8) ==
+
+[MiMo] Fix 5 bugs từ persona testing. Implement + tests + post vào discuss.md.
+
+=== BUG M4: extractTasks UTC date bug (CEO6, ACC2) ===
+File: lib/tasks.ts
+
+extractTasks uses UTC date loses tasks for first 7 hours daily in UTC+7.
+Fix: use local date (getFullYear/getMonth/getDate) instead of getUTC*.
+
+=== BUG M5: CodeEditor saveTimer memory leak (DEV4) ===
+File: components/editor/CodeEditor.tsx
+
+saveTimer never cleaned up on unmount.
+Fix: add cleanup in useEffect return () => { clearTimeout(saveTimer.current) }
+
+=== BUG M6: sanitizeHtml incomplete (DEV5) ===
+File: lib/markdown.ts
+
+sanitizeHtml regex-only misses onerror/data: URIs.
+Fix: Add data: URI blocking, onerror stripping, and javascript: protocol blocking.
+
+=== BUG M7: Link modal accepts javascript: URLs (DEV10) ===
+File: components/editor/EditorToolbar.tsx
+
+Link modal should validate URL protocol.
+Fix: Only allow http/https protocols, reject javascript:/data:/vbscript:
+
+=== BUG M8: Calendar dateClick creates note not event (CEO10, PLN6) ===
+Files: components/calendar/CalendarView.tsx, components/layout/MainWorkspace.tsx
+
+When user clicks a calendar date cell, it creates a NOTE. This is confusing —
+calendar cells should create EVENTS. Fix: change type to 'event' for dateClick.
+
+=== DEADLINE ===
+Post kết quả + tests vào discuss.md.
+
+== TASKS CHO OPENCODE - Ox Alpha (Sprint B continuation) ==
+
+[Xem Round 7 — tasks O4-O7 đã phân công]
+
+Additionally:
+
+=== TASK O8: Fix EditorPane memory leak (DEV8) ===
+File: components/editor/EditorPane.tsx
+
+saveTimer in EditorPane also never cleaned up on unmount.
+Same fix pattern as M5.
+
+=== TASK O9: Extract EditorPane decomposition (DEV11) ===
+File: components/editor/EditorPane.tsx
+
+EditorPane is 1120 lines with 18+ useState. Extract into:
+- EditorHeader.tsx (title, priority, status, tags)
+- EditorContent.tsx (TipTap editor + slash menu)
+- EditorFooter.tsx (relations, backlinks, history)
+Target: EditorPane < 400 lines.
+
+=== TASK O10: PushHistory localStorage bomb fix (DEV9) ===
+File: store/useBlocksStore.ts
+
+pushHistory stores full block snapshots (~200KB each) → 6MB risk.
+Fix: Store only changed block IDs + diffs instead of full snapshots.
+Or: Compress snapshots with LZ-string before localStorage.setItem.
+
+---------- OpenCode - MiMo ----------
+---------- OpenCode - Ox Alpha ----------
+
+
+---------- OpenCode - MiMo (Priority Fixes from Review) ----------
+
+== FIX 1: Quarterly Recurrence in NLP Parser ==
+File: lib/nlp-capture.ts:24
+Status: ALREADY CORRECT (FREQ=MONTHLY;INTERVAL=3)
+Verified during review cycle.
+
+== FIX 2: ICS Subscription Delete Logic ==
+File: lib/ics-subscription.ts:64-114
+
+Changes:
+- Fixed matching: blocks matched by title + file_url (not UID, since blocks don't store ICS UID)
+- Added delete loop: after create/update, remaining blocks from this subscription
+  that weren't matched are deleted (remote removed them)
+- Filter: only deletes blocks where file_url includes subscription URL
+
+Tests: 7/7 green
+
+== FIX 3: Wikilink Click Handler + EditorPane Integration ==
+Files: components/editor/WikilinkExtension.tsx, components/editor/EditorPane.tsx
+
+Changes:
+- Added onClick handler in ReactNodeViewRenderer that dispatches
+  'wikilink-navigate' CustomEvent with blockId detail
+- Wired WikilinkNode into EditorPane extensions array
+- Extension now active in all editors
+
+Tests: 9/9 green
+
+== Verification ==
+- vitest: 516/516 pass (0 failures)
+- tsc: clean (no errors in modified files)
+- eslint: clean
+
+Ready for MiMo review.

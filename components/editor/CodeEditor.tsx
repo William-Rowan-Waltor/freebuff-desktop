@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import Editor, { loader } from '@monaco-editor/react'
 import * as monaco from 'monaco-editor'
 import editorWorker from '@/lib/workers/editor.worker?worker'
@@ -81,6 +81,13 @@ interface CodeEditorProps {
 
 export default function CodeEditor({ block, onChange }: CodeEditorProps) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup saveTimer on unmount to prevent memory leak (DEV4)
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    }
+  }, [])
 
   return (
     <div className="flex h-full flex-col">
